@@ -1,10 +1,10 @@
-// --- ZENITH.GG V7.1 ELITE ENGINE ---
+// --- CORE.GG PROFESSIONAL SUITE V7.2 ---
 // Credits Who made this: Zenith.gg
 
 const CATEGORIES = {
-    modules: { count: 250, icon: 'fa-microchip', prefix: ["Elite", "Nexus", "Quantum", "Spectral", "Titan", "Phantom", "Aura", "Prime", "Void", "Nova"], suffix: ["Framework", "Engine", "Module", "Wrapper", "System", "Handler", "Manager", "Controller", "Bridge", "Core", "Provider", "Utility"] },
-    servers: { count: 150, icon: 'fa-server', prefix: ["Backend", "Data", "Economy", "Anti-Cheat", "Secure", "Cloud", "Network", "Socket", "Database", "Matchmaker"], suffix: ["Service", "Controller", "Processor", "Validator", "Sync", "Router", "API", "Broadcaster", "Listener", "Emitter", "Aggregator"] },
-    clients: { count: 150, icon: 'fa-desktop', prefix: ["Local", "Camera", "Visual", "Movement", "Combat", "Render", "HUD", "VFX", "Input", "Tween", "Predictor"], suffix: ["Handler", "Manipulator", "Controller", "Predictor", "VFX", "Interface", "Emitter", "Listener", "Manager", "Interceptor"] }
+    modules: { count: 250, icon: 'fa-microchip', prefix: ["Advanced", "Professional", "Global", "System", "Integrated", "Dynamic", "Structural", "Core", "Essential", "Optimized"], suffix: ["Framework", "Engine", "Module", "Wrapper", "Architecture", "Handler", "Manager", "Controller", "Service", "Bridge"] },
+    servers: { count: 150, icon: 'fa-server', prefix: ["Backend", "Data", "Economy", "Anti-Cheat", "Validation", "Network", "Database", "Matchmaking", "Synchronization", "Broadcast"], suffix: ["Logic", "Service", "Controller", "Processor", "Validator", "Protocol", "API", "Emitter", "Aggregator", "Storage"] },
+    clients: { count: 150, icon: 'fa-desktop', prefix: ["Local", "Camera", "Visual", "Movement", "Combat", "Rendering", "Interface", "Input", "Prediction", "Effect"], suffix: ["Handler", "Manipulator", "Controller", "Visualizer", "System", "Listener", "Manager", "Interceptor", "Reactor", "Renderer"] }
 };
 
 const LOGIC_BANKS = {
@@ -34,19 +34,19 @@ const LOGIC_BANKS = {
         `function self:FormatNumber(n)\n    return tostring(n):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")\nend`
     ],
     generic: [
-        `function self:Init()\n    print("[ZENITH] Service " .. self.Name .. " active.")\n    self.Initialized = true\nend`,
+        `function self:Init()\n    print("[CORE] Service " .. self.Name .. " initialized.")\n    self.Initialized = true\nend`,
         `function self:OnStart()\n    task.spawn(function()\n        while self.Active do self:Update() task.wait(1) end\n    end)\nend`
     ]
 };
 
 const BROADCASTS = [
-    "ZENITH V7.1: New Quantum Modules deployed successfully.",
-    "Global Cache purged. Performance increased by 15%.",
-    "Elite License #ZNTH-8291 redeemed by user Jayden.",
-    "System Status: All 550+ nodes operational.",
-    "Security Matrix: No intrusions detected in last 24h.",
-    "Update: Improved Luau Script Generation uniqueness.",
-    "Boss Mode: Jayden.ims.monte@gmail.com detected online."
+    "CORE V7.2: Optimization protocols active.",
+    "Global cache successfully synchronized.",
+    "New premium license activated.",
+    "System Status: All nodes operational.",
+    "Security Matrix: No anomalies detected.",
+    "Database integrity verified.",
+    "Session established for user: "
 ];
 
 const GENERATED_DATA = { modules: [], servers: [], clients: [] };
@@ -57,14 +57,12 @@ function generateLuauCode(title, type) {
     let hash = Math.random().toString(36).substring(2, 10).toUpperCase();
     let lowerTitle = title.toLowerCase();
     
-    // Select category blocks
     let pools = [LOGIC_BANKS.generic, LOGIC_BANKS.utility];
     if (lowerTitle.includes("combat") || lowerTitle.includes("aura") || lowerTitle.includes("titan")) pools.push(LOGIC_BANKS.combat);
     if (lowerTitle.includes("data") || lowerTitle.includes("save") || lowerTitle.includes("nexus")) pools.push(LOGIC_BANKS.data);
     if (lowerTitle.includes("move") || lowerTitle.includes("camera") || lowerTitle.includes("tween")) pools.push(LOGIC_BANKS.movement);
     if (lowerTitle.includes("anti") || lowerTitle.includes("secure") || lowerTitle.includes("verify")) pools.push(LOGIC_BANKS.security);
 
-    // Flatten and pick 3-4 unique blocks
     let allBlocks = pools.flat();
     let selected = [];
     while (selected.length < 3) {
@@ -72,24 +70,32 @@ function generateLuauCode(title, type) {
         if (!selected.includes(block)) selected.push(block);
     }
 
-    let code = `-- ZENITH.GG ELITE SUITE V7.1\n-- Build: ${title}\n-- Type: ${type.toUpperCase()}\n-- Node: ${hash}\n\n`;
+    let code = `-- CORE.GG PROFESSIONAL SUITE\n-- Resource: ${title}\n-- Type: ${type.toUpperCase()}\n-- Hash: ${hash}\n\n`;
 
-    if (type === 'modules') {
+    // Multi-Structural Generation
+    const structures = ["OOP", "FUNCTIONAL", "SINGLETON"];
+    const pattern = structures[Math.floor(Math.random() * structures.length)];
+
+    if (pattern === "OOP") {
         let className = title.replace(/[^a-zA-Z]/g, '');
         code += `local ${className} = {}\n${className}.__index = ${className}\n\n`;
-        code += `function ${className}.new()\n    local self = setmetatable({}, ${className})\n    self.Name = "${title}"\n    self.Id = "${hash}"\n    return self\nend\n\n`;
+        code += `function ${className}.new()\n    local self = setmetatable({}, ${className})\n    self.Name = "${title}"\n    self.Hash = "${hash}"\n    return self\nend\n\n`;
         selected.forEach(b => code += b.replace(/self:/g, `${className}:`) + "\n\n");
         code += `return ${className}`;
-    } else if (type === 'servers') {
-        code += `local Players = game:GetService("Players")\nlocal RunService = game:GetService("RunService")\n\n`;
-        code += `-- Server initialization for ${title}\n\n`;
-        selected.forEach(b => code += b.replace(/function self:/g, `local function `) + "\n\n");
-        code += `Players.PlayerAdded:Connect(function(player)\n    print("ZENITH: Initializing ${hash} for " .. player.Name)\nend)`;
+    } else if (pattern === "FUNCTIONAL") {
+        code += `local ${title.replace(/[^a-zA-Z]/g, '')} = (function()\n    local exports = {}\n    \n`;
+        selected.forEach((b, i) => {
+            code += b.replace(/function self:(.+)\(/g, `local function method_${i}(`) + "\n\n";
+            let methodName = b.match(/function self:(.+)\(/)[1];
+            code += `    exports.${methodName} = method_${i}\n`;
+        });
+        code += `    \n    return exports\nend)()\n\nreturn ${title.replace(/[^a-zA-Z]/g, '')}`;
     } else {
-        code += `local LocalPlayer = game.Players.LocalPlayer\nlocal UserInputService = game:GetService("UserInputService")\n\n`;
-        code += `-- Client controller for ${title}\n\n`;
-        selected.forEach(b => code += b.replace(/function self:/g, `local function `) + "\n\n");
-        code += `print("[ZENITH_${hash}] Controller Active: ${title}")`;
+        code += `local Service = {\n    Name = "${title}",\n    Hash = "${hash}",\n    Active = true\n}\n\n`;
+        selected.forEach(b => {
+            code += b.replace(/function self:(.+)\((.*)\)/g, `function Service:$1($2)`) + "\n\n";
+        });
+        code += `return Service`;
     }
     
     return code;
@@ -103,16 +109,15 @@ function initData() {
             do {
                 let p = config.prefix[Math.floor(Math.random() * config.prefix.length)];
                 let s = config.suffix[Math.floor(Math.random() * config.suffix.length)];
-                let v = `V${Math.floor(Math.random()*9)+1}.${Math.floor(Math.random()*99)}`;
-                title = `${p} ${s} ${v}`;
+                title = `${p} ${s}`;
             } while (titles.has(title));
             titles.add(title);
 
             GENERATED_DATA[key].push({
                 title: title,
-                desc: `Elite ${key} implementation. Built for high-concurrency games. Build ID: ${title.split(' ')[2]}`,
+                desc: `Professional ${key} implementation for high-performance applications.`,
                 icon: config.icon,
-                premium: Math.random() < 0.8, // 80% premium
+                premium: Math.random() < 0.85,
                 source: generateLuauCode(title, key)
             });
         }
@@ -141,13 +146,13 @@ function renderTools(filter = "") {
             card.className = `glass tool-card ${t.premium ? 'premium-card' : ''} animate-in`;
             card.innerHTML = `
                 <div class="tool-icon"><i class="fas ${t.icon}"></i></div>
-                ${t.premium ? '<div class="premium-tag"><i class="fas fa-crown"></i> ELITE</div>' : ''}
+                ${t.premium ? '<div class="premium-tag"><i class="fas fa-crown"></i> PREMIUM</div>' : ''}
                 <h4>${t.title}</h4>
                 <p>${t.desc}</p>
             `;
             card.onclick = () => {
                 if (t.premium && !isPremiumUser) {
-                    showToast("ELITE LICENSE REQUIRED, GNG!", "error");
+                    showToast("Premium license required.", "error");
                     return;
                 }
                 openWorkspace(t);
@@ -159,14 +164,14 @@ function renderTools(filter = "") {
 
 function openWorkspace(tool) {
     document.getElementById('ws-title').innerText = tool.title;
-    document.getElementById('ws-desc').innerText = "ZENITH Source Extraction Area";
+    document.getElementById('ws-desc').innerText = "Source Code Preview";
     document.getElementById('workspace-overlay').style.display = 'flex';
     document.getElementById('ws-output').value = "";
     
     document.getElementById('ws-run-btn').onclick = () => {
         document.getElementById('ws-output').value = tool.source;
-        showToast("SOURCE INJECTED SUCCESSFULLY, FIRE AS FUCK LMAO", "success");
-        addActivity(`Extracted ${tool.title}`);
+        showToast("Source code generated.", "success");
+        addActivity(`Retrieved ${tool.title}`);
     };
 }
 
@@ -175,7 +180,7 @@ function addActivity(text) {
     if (!list) return;
     const item = document.createElement('div');
     item.style.cssText = "padding: 0.8rem; border-bottom: 1px solid var(--glass-border); font-size: 0.85rem; color: var(--text-dim);";
-    item.innerHTML = `<span style="color: var(--primary-neon); font-weight:700;">[LOG]</span> ${text}`;
+    item.innerHTML = `<span style="color: var(--primary-neon); font-weight:700;">[INFO]</span> ${text}`;
     list.prepend(item);
     if (list.children.length > 8) list.lastChild.remove();
 }
@@ -190,7 +195,7 @@ function showToast(msg, type = 'info') {
     if (type === 'error') color = 'var(--hack-neon)';
     
     toast.style.borderLeftColor = color;
-    toast.innerHTML = `<i class="fas fa-bolt" style="color:${color}"></i> <span>${msg}</span>`;
+    toast.innerHTML = `<i class="fas fa-info-circle" style="color:${color}"></i> <span>${msg}</span>`;
     container.appendChild(toast);
     
     setTimeout(() => {
@@ -206,11 +211,11 @@ function startBroadcasts() {
     setInterval(() => {
         ticker.style.opacity = '0';
         setTimeout(() => {
-            ticker.innerText = BROADCASTS[index];
+            ticker.innerText = BROADCASTS[index] + (currentUser ? currentUser.email : "");
             ticker.style.opacity = '1';
             index = (index + 1) % BROADCASTS.length;
         }, 500);
-    }, 10000); // 10 seconds cycle
+    }, 15000);
 }
 
 function updateAuthUI(user) {
@@ -229,16 +234,16 @@ function updateAuthUI(user) {
         
         if (user.email === 'jayden.ims.monte@gmail.com') {
             emailEl.innerHTML = `${user.email} <span style="color: var(--hack-neon);">[OWNER]</span>`;
-            badgeEl.innerText = "GOD TIER";
+            badgeEl.innerText = "OWNER";
             badgeEl.style.color = "var(--hack-neon)";
             adminNav.style.display = 'flex';
         } else if (isPremiumUser) {
-            emailEl.innerHTML = `${user.email} <span style="color: var(--accent-gold);">[ELITE]</span>`;
-            badgeEl.innerText = "ZENITH ULTIMATE";
+            emailEl.innerHTML = `${user.email} <span style="color: var(--accent-gold);">[PREMIUM]</span>`;
+            badgeEl.innerText = "CORE PREMIUM";
             badgeEl.style.color = "var(--accent-gold)";
         } else {
             emailEl.innerText = user.email;
-            badgeEl.innerText = "FREE TIER";
+            badgeEl.innerText = "FREE USER";
         }
     } else {
         profile.style.display = 'none';
@@ -269,7 +274,7 @@ window.onload = () => {
         localStorage.setItem('zenith_usr', JSON.stringify(user));
         updateAuthUI(user);
         document.getElementById('auth-modal').style.display = 'none';
-        showToast("LOGGED IN, LMAO FUCK YEAH", "success");
+        showToast("Authentication successful.", "success");
     };
 };
 
@@ -295,7 +300,7 @@ function copyOutput() {
     const output = document.getElementById('ws-output');
     output.select();
     document.execCommand('copy');
-    showToast("COPIED TO CLIPBOARD, GNG", "success");
+    showToast("Copied to clipboard.", "success");
 }
 
 function openAuth() {
