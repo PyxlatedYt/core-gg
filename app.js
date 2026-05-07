@@ -1,4 +1,4 @@
-// --- CORE.GG PROFESSIONAL SUITE V7.8 (SECURE AUTH & HWID LOCK) ---
+// --- CORE.GG PROFESSIONAL SUITE V7.9 (RESTORATION & SECURITY) ---
 // Credits Who made this: Zenith.gg
 
 const CATEGORIES = {
@@ -9,12 +9,46 @@ const CATEGORIES = {
 };
 
 const LOGIC_BANKS = {
-    combat: [`function self:CastRaycastHitbox(origin, direction, range)\n    local params = RaycastParams.new()\n    params.FilterDescendantsInstances = {self.Player.Character}\n    params.FilterType = Enum.RaycastFilterType.Exclude\n    local result = workspace:Raycast(origin, direction * range, params)\n    if result then self:HandleHit(result.Instance, result.Position) end\nend`],
-    data: [`function self:LoadData(player)\n    local key = "Player_" .. player.UserId\n    local success, data = pcall(function() return self.Store:GetAsync(key) end)\n    if success then self.SessionData[player] = data or self.Default end\nend`],
-    network: [`function self:FireClient(player, action, ...)\n    self.Remote:FireClient(player, {A = action, P = {...}})\nend`],
-    camera: [`function self:Shake(intensity)\n    task.spawn(function()\n        for i = 1, 10 do\n            self.Camera.CFrame *= CFrame.Angles(math.rad(math.random(-intensity, intensity)), 0, 0)\n            task.wait(0.05)\n        end\n    end)\nend`],
-    tools: [`function self:Minify(code)\n    return code:gsub("%s+", " "):gsub("%-%-.-\\n", ""):gsub("%-%-%[%[.-%]%]", "")\nend`],
-    generic: [`function self:Init()\n    print("[CORE] Service " .. self.Name .. " initialized.")\nend`]
+    combat: [
+        `function self:CastRaycastHitbox(origin, direction, range)\n    local params = RaycastParams.new()\n    params.FilterDescendantsInstances = {self.Player.Character}\n    params.FilterType = Enum.RaycastFilterType.Exclude\n    local result = workspace:Raycast(origin, direction * range, params)\n    if result then self:HandleHit(result.Instance, result.Position) end\nend`,
+        `function self:CheckMagnitude(target)\n    local dist = (self.Root.Position - target.Position).Magnitude\n    if dist <= self.AttackRange then return true end\n    return false\nend`,
+        `function self:ApplyKnockback(target, power)\n    local velocity = Instance.new("BodyVelocity")\n    velocity.Velocity = (target.Position - self.Root.Position).Unit * power\n    velocity.MaxForce = Vector3.new(100000, 100000, 100000)\n    velocity.Parent = target\n    task.wait(0.15)\n    velocity:Destroy()\nend`
+    ],
+    data: [
+        `function self:LoadData(player)\n    local key = "Player_" .. player.UserId\n    local success, data = pcall(function() return self.Store:GetAsync(key) end)\n    if success then self.SessionData[player] = data or self.Default end\nend`,
+        `function self:UpdateValue(player, key, val)\n    if self.SessionData[player] then\n        self.SessionData[player][key] = val\n        self.Signals.DataUpdated:Fire(player, key, val)\n    end\nend`,
+        `function self:Reconcile(data, template)\n    for k, v in pairs(template) do\n        if data[k] == nil then data[k] = v end\n    end\n    return data\nend`
+    ],
+    network: [
+        `function self:FireClient(player, action, ...)\n    self.Remote:FireClient(player, {A = action, P = {...}})\nend`,
+        `function self:OnServerEvent(player, packet)\n    if not self:Validate(player, packet) then return end\n    local handler = self.Handlers[packet.A]\n    if handler then handler(player, unpack(packet.P)) end\nend`,
+        `function self:Broadcast(packet)\n    for _, player in pairs(game.Players:GetPlayers()) do\n        self:FireClient(player, packet)\n    end\nend`
+    ],
+    camera: [
+        `function self:SmoothTween(targetCF, duration)\n    local tween = self.TweenService:Create(self.Camera, TweenInfo.new(duration), {CFrame = targetCF})\n    tween:Play()\n    return tween\nend`,
+        `function self:Shake(intensity)\n    task.spawn(function()\n        for i = 1, 10 do\n            self.Camera.CFrame *= CFrame.Angles(math.rad(math.random(-intensity, intensity)), 0, 0)\n            task.wait(0.05)\n        end\n    end)\nend`
+    ],
+    security: [
+        `function self:DetectAntiCheat(player)\n    local char = player.Character\n    if char and char:FindFirstChild("Humanoid").WalkSpeed > 25 then\n        self:Flag(player, "SpeedHack")\n    end\nend`,
+        `function self:VerifyHash(input, expected)\n    local hash = self.HashService:Generate(input)\n    return hash == expected\nend`
+    ],
+    tools: [
+        `function self:ProcessBytecode(source)\n    local stream = self.Stream.new(source)\n    local header = stream:ReadBytes(4)\n    if header ~= "\\x1bLuau" then return nil, "Invalid Bytecode" end\n    return self:Decompile(stream)\nend`,
+        `function self:ObfuscateStrings(tbl)\n    for k, v in pairs(tbl) do\n        if type(v) == "string" then tbl[k] = self:Encrypt(v) end\n    end\nend`,
+        `function self:Minify(code)\n    return code:gsub("%s+", " "):gsub("%-%-.-\\n", ""):gsub("%-%-%[%[.-%]%]", "")\nend`
+    ],
+    economy: [
+        `function self:AddCurrency(player, amount)\n    local profile = self:GetProfile(player)\n    if profile then profile.Data.Balance += amount end\nend`,
+        `function self:PurchaseItem(player, itemId)\n    local cost = self.Registry[itemId].Cost\n    if self:GetBalance(player) >= cost then self:Deduct(player, cost) return true end\n    return false\nend`
+    ],
+    ai: [
+        `function self:Pathfind(destination)\n    local path = self.PathService:CreatePath({AgentCanJump = true})\n    path:ComputeAsync(self.Root.Position, destination)\n    return path:GetWaypoints()\nend`,
+        `function self:FindNearestTarget()\n    local best, dist = nil, math.huge\n    for _, enemy in pairs(self.Enemies) do\n        local d = (self.Root.Position - enemy.Position).Magnitude\n        if d < dist then best, dist = enemy, d end\n    end\n    return best\nend`
+    ],
+    generic: [
+        `function self:Init()\n    print("[CORE] Service " .. self.Name .. " initialized.")\n    self.Active = true\nend`,
+        `function self:Shutdown()\n    self.Active = false\n    print("[CORE] Cleanup complete.")\nend`
+    ]
 };
 
 const GENERATED_DATA = { modules: [], servers: [], clients: [], tools: [] };
@@ -27,6 +61,50 @@ let hwid = localStorage.getItem('core_hwid') || (() => {
     localStorage.setItem('core_hwid', id);
     return id;
 })();
+
+// --- INTELLIGENT GENERATOR ---
+function generateLuauCode(title, type) {
+    let lower = title.toLowerCase();
+    let code = `-- CORE.GG PROFESSIONAL SUITE V7.9\n-- Resource: ${title}\n-- Type: ${type.toUpperCase()}\n-- HWID Locked: ${hwid}\n\n`;
+    
+    let selectedBlocks = [...LOGIC_BANKS.generic];
+    if (lower.includes("combat")) selectedBlocks.push(...LOGIC_BANKS.combat);
+    else if (lower.includes("data") || lower.includes("store")) selectedBlocks.push(...LOGIC_BANKS.data);
+    else if (lower.includes("network") || lower.includes("relay") || lower.includes("api")) selectedBlocks.push(...LOGIC_BANKS.network);
+    else if (lower.includes("camera") || lower.includes("visual") || lower.includes("rendering")) selectedBlocks.push(...LOGIC_BANKS.camera);
+    else if (lower.includes("secure") || lower.includes("valid") || lower.includes("hardener")) selectedBlocks.push(...LOGIC_BANKS.security);
+    else if (lower.includes("economy") || lower.includes("matchmaking")) selectedBlocks.push(...LOGIC_BANKS.economy);
+    else if (lower.includes("path") || lower.includes("nexus") || lower.includes("dynamic")) selectedBlocks.push(...LOGIC_BANKS.ai);
+    
+    if (type === 'tools' || lower.includes("obfuscator") || lower.includes("decompiler") || lower.includes("minifier")) {
+        selectedBlocks.push(...LOGIC_BANKS.tools);
+    }
+
+    const pattern = ["OOP", "SINGLETON", "FUNCTIONAL"][Math.floor(Math.random() * 3)];
+    let name = title.replace(/[^a-zA-Z]/g, '');
+
+    if (pattern === "OOP") {
+        code += `local ${name} = {}\n${name}.__index = ${name}\n\n`;
+        code += `function ${name}.new(...)\n    local self = setmetatable({}, ${name})\n    self.Name = "${title}"\n    self:Init(...)\n    return self\nend\n\n`;
+        selectedBlocks.forEach(b => code += b.replace(/function self:/g, `function ${name}:`) + "\n\n");
+        code += `return ${name}`;
+    } else if (pattern === "SINGLETON") {
+        code += `local ${name} = {}\n${name}.Active = false\n\n`;
+        selectedBlocks.forEach(b => code += b.replace(/function self:/g, `function ${name}:`) + "\n\n");
+        code += `return ${name}`;
+    } else {
+        code += `local Service = { _VERSION = "CORE.7.9" }\n\n`;
+        selectedBlocks.forEach((b, i) => {
+            let match = b.match(/function self:(.+)\(/);
+            if (match) {
+                code += b.replace(/function self:(.+)\(/g, `local function method_${i}(`) + "\n\n";
+                code += `Service.${match[1]} = method_${i}\n`;
+            }
+        });
+        code += `\nreturn Service`;
+    }
+    return code;
+}
 
 // --- GLOBAL FUNCTIONS ---
 window.switchTab = function(target) {
@@ -64,23 +142,12 @@ window.showToast = function(msg, type = 'info') {
 window.redeemLicense = function() {
     const key = document.getElementById('redeem-key-input').value.trim();
     const license = activeLicenses.find(l => l.key === key);
-
     if (!license) { window.showToast("Invalid key.", "error"); return; }
-    if (license.hwid && license.hwid !== hwid) { 
-        window.showToast("Key sharing detected. HWID Mismatch.", "error"); 
-        return; 
-    }
-
-    license.hwid = hwid;
-    license.status = 'Claimed';
-    license.redeemed_by = currentUser.email;
+    if (license.hwid && license.hwid !== hwid) { window.showToast("HWID Mismatch.", "error"); return; }
+    license.hwid = hwid; license.status = 'Claimed'; license.redeemed_by = currentUser.email;
     localStorage.setItem('core_licenses', JSON.stringify(activeLicenses));
-    
-    currentUser.premium = true;
-    localStorage.setItem('zenith_usr', JSON.stringify(currentUser));
-    
-    updateAuthUI(currentUser);
-    window.showToast("License Activated! Welcome to Premium.", "success");
+    currentUser.premium = true; localStorage.setItem('zenith_usr', JSON.stringify(currentUser));
+    updateAuthUI(currentUser); window.showToast("License Activated!", "success");
 };
 
 // --- ADMIN LICENSE MANAGER ---
@@ -89,14 +156,14 @@ window.generateLicense = function() {
     const key = `CORE-${Math.random().toString(36).substring(2,6).toUpperCase()}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
     activeLicenses.push({ key, duration: dur, status: 'Active', created: new Date().toLocaleDateString(), hwid: null });
     localStorage.setItem('core_licenses', JSON.stringify(activeLicenses));
-    renderLicenses();
-    window.showToast(`Generated: ${key}`, "success");
+    renderLicenses(); updateRealTimeStats();
+    window.showToast(`Key: ${key}`, "success");
 };
 
 window.revokeLicense = function(key) {
     activeLicenses = activeLicenses.filter(l => l.key !== key);
     localStorage.setItem('core_licenses', JSON.stringify(activeLicenses));
-    renderLicenses();
+    renderLicenses(); updateRealTimeStats();
     window.showToast("Revoked.", "error");
 };
 
@@ -113,33 +180,6 @@ function renderLicenses() {
     `).join('') || '<p style="color:var(--text-dim); text-align:center;">No licenses.</p>';
 }
 
-// --- GENERATION ENGINE ---
-function generateLuauCode(title, type) {
-    let lower = title.toLowerCase();
-    let code = `-- CORE.GG PROFESSIONAL SUITE V7.8\n-- Resource: ${title}\n-- HWID Locked: ${hwid}\n\n`;
-    let selectedBlocks = [...LOGIC_BANKS.generic];
-    if (lower.includes("combat")) selectedBlocks.push(...LOGIC_BANKS.combat);
-    else if (lower.includes("data")) selectedBlocks.push(...LOGIC_BANKS.data);
-    else if (lower.includes("network")) selectedBlocks.push(...LOGIC_BANKS.network);
-    else if (lower.includes("camera")) selectedBlocks.push(...LOGIC_BANKS.camera);
-    else if (type === 'tools') selectedBlocks.push(...LOGIC_BANKS.tools);
-
-    const pattern = ["OOP", "SINGLETON"][Math.floor(Math.random() * 2)];
-    let name = title.replace(/[^a-zA-Z]/g, '');
-
-    if (pattern === "OOP") {
-        code += `local ${name} = {}\n${name}.__index = ${name}\n\nfunction ${name}.new()\n    local self = setmetatable({}, ${name})\n    return self\nend\n\n`;
-        selectedBlocks.forEach(b => code += b.replace(/function self:/g, `function ${name}:`) + "\n\n");
-        code += `return ${name}`;
-    } else {
-        code += `local Service = {}\n\n`;
-        selectedBlocks.forEach(b => code += b.replace(/function self:(.+)\((.*)\)/g, `function Service:$1($2)`) + "\n\n");
-        code += `return Service`;
-    }
-    return code;
-}
-
-// --- CORE SYSTEM ---
 function initData() {
     let used = new Set();
     for (const [key, config] of Object.entries(CATEGORIES)) {
@@ -214,9 +254,7 @@ window.onload = () => {
     document.getElementById('search-input').oninput = (e) => renderTools(e.target.value);
     document.getElementById('auth-form').onsubmit = (e) => {
         e.preventDefault();
-        const email = document.getElementById('auth-email').value;
-        const pass = document.getElementById('auth-password').value;
-        const u = { email, pass, premium: email === 'jayden.ims.monte@gmail.com', created_at: Date.now() };
+        const u = { email: document.getElementById('auth-email').value, pass: document.getElementById('auth-password').value, premium: document.getElementById('auth-email').value === 'jayden.ims.monte@gmail.com', created_at: Date.now() };
         localStorage.setItem('zenith_usr', JSON.stringify(u));
         updateAuthUI(u); closeModal('auth-modal'); window.showToast("Welcome.", "success");
     };
