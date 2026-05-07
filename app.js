@@ -1,10 +1,10 @@
-// --- CORE.GG PROFESSIONAL SUITE V7.2 (OPTIMIZED) ---
+// --- CORE.GG PROFESSIONAL SUITE V7.2 (ULTRA-LITE) ---
 // Credits Who made this: Zenith.gg
 
 const CATEGORIES = {
-    modules: { count: 250, icon: 'fa-microchip', prefix: ["Advanced", "Professional", "Global", "System", "Integrated", "Dynamic", "Structural", "Core", "Essential", "Optimized"], suffix: ["Framework", "Engine", "Module", "Wrapper", "Architecture", "Handler", "Manager", "Controller", "Service", "Bridge"] },
-    servers: { count: 150, icon: 'fa-server', prefix: ["Backend", "Data", "Economy", "Anti-Cheat", "Validation", "Network", "Database", "Matchmaking", "Synchronization", "Broadcast"], suffix: ["Logic", "Service", "Controller", "Processor", "Validator", "Protocol", "API", "Emitter", "Aggregator", "Storage"] },
-    clients: { count: 150, icon: 'fa-desktop', prefix: ["Local", "Camera", "Visual", "Movement", "Combat", "Rendering", "Interface", "Input", "Prediction", "Effect"], suffix: ["Handler", "Manipulator", "Controller", "Visualizer", "System", "Listener", "Manager", "Interceptor", "Reactor", "Renderer"] }
+    modules: { count: 100, icon: 'fa-microchip', prefix: ["Advanced", "System", "Integrated", "Core", "Essential", "Optimized"], suffix: ["Framework", "Engine", "Module", "Wrapper", "Handler", "Manager", "Service"] },
+    servers: { count: 50, icon: 'fa-server', prefix: ["Backend", "Data", "Economy", "Secure", "Network"], suffix: ["Logic", "Service", "Processor", "Validator", "API"] },
+    clients: { count: 50, icon: 'fa-desktop', prefix: ["Local", "Camera", "Visual", "Movement", "Combat"], suffix: ["Handler", "Controller", "Visualizer", "Manager", "Interceptor"] }
 };
 
 const LOGIC_BANKS = {
@@ -43,7 +43,7 @@ const BROADCASTS = [
     "CORE V7.2: Optimization protocols active.",
     "Global cache successfully synchronized.",
     "New premium license activated.",
-    "System Status: All nodes operational.",
+    "System Status: All 200+ nodes operational.",
     "Security Matrix: No anomalies detected.",
     "Database integrity verified."
 ];
@@ -53,74 +53,60 @@ let isPremiumUser = false;
 let currentUser = null;
 
 // --- GLOBAL FUNCTIONS ---
-window.switchTab = function(target) {
+function switchTab(target) {
     document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.dataset.target === target));
     document.querySelectorAll('.dashboard-section').forEach(s => {
         s.classList.toggle('active', s.id === target);
         s.style.display = s.id === target ? 'block' : 'none';
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-};
+}
 
-window.openAuth = function() {
-    const modal = document.getElementById('auth-modal');
-    if (modal) modal.style.display = 'flex';
-};
+function openAuth() {
+    document.getElementById('auth-modal').style.display = 'flex';
+}
 
-window.closeModal = function(id) {
-    const modal = document.getElementById(id);
-    if (modal) modal.style.display = 'none';
-};
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
 
-window.signOut = function() {
+function signOut() {
     localStorage.removeItem('zenith_usr');
     location.reload();
-};
+}
 
-window.closeWorkspace = function() {
-    const ws = document.getElementById('workspace-overlay');
-    if (ws) ws.style.display = 'none';
-};
+function closeWorkspace() {
+    document.getElementById('workspace-overlay').style.display = 'none';
+}
 
-window.copyOutput = function() {
+function copyOutput() {
     const output = document.getElementById('ws-output');
-    if (output) {
-        output.select();
-        document.execCommand('copy');
-        window.showToast("Copied to clipboard.", "success");
-    }
-};
+    output.select();
+    document.execCommand('copy');
+    showToast("Copied to clipboard.", "success");
+}
 
-window.showToast = function(msg, type = 'info') {
+function showToast(msg, type = 'info') {
     const container = document.getElementById('toast-container');
-    if (!container) return;
     const toast = document.createElement('div');
     toast.className = 'custom-toast';
-    
-    let color = 'var(--primary-neon)';
-    if (type === 'success') color = 'var(--accent-green)';
-    if (type === 'error') color = 'var(--hack-neon)';
-    
+    let color = type === 'success' ? '#10b981' : (type === 'error' ? '#f43f5e' : '#3b82f6');
     toast.style.borderLeftColor = color;
-    toast.innerHTML = `<i class="fas fa-info-circle" style="color:${color}"></i> <span>${msg}</span>`;
+    toast.innerHTML = `<i class="fas fa-info-circle"></i> <span>${msg}</span>`;
     container.appendChild(toast);
-    
     setTimeout(() => {
         toast.style.animation = 'slideOutRight 0.4s forwards';
         setTimeout(() => toast.remove(), 400);
     }, 3000);
-};
+}
 
-// --- LAZY GENERATION ENGINE ---
 function generateLuauCode(title, type) {
     let hash = Math.random().toString(36).substring(2, 10).toUpperCase();
     let lowerTitle = title.toLowerCase();
-    
     let pools = [LOGIC_BANKS.generic, LOGIC_BANKS.utility];
-    if (lowerTitle.includes("combat") || lowerTitle.includes("aura") || lowerTitle.includes("titan")) pools.push(LOGIC_BANKS.combat);
-    if (lowerTitle.includes("data") || lowerTitle.includes("save") || lowerTitle.includes("nexus")) pools.push(LOGIC_BANKS.data);
-    if (lowerTitle.includes("move") || lowerTitle.includes("camera") || lowerTitle.includes("tween")) pools.push(LOGIC_BANKS.movement);
-    if (lowerTitle.includes("anti") || lowerTitle.includes("secure") || lowerTitle.includes("verify")) pools.push(LOGIC_BANKS.security);
+    if (lowerTitle.includes("combat")) pools.push(LOGIC_BANKS.combat);
+    if (lowerTitle.includes("data")) pools.push(LOGIC_BANKS.data);
+    if (lowerTitle.includes("move")) pools.push(LOGIC_BANKS.movement);
+    if (lowerTitle.includes("secure")) pools.push(LOGIC_BANKS.security);
 
     let allBlocks = pools.flat();
     let selected = [];
@@ -129,227 +115,113 @@ function generateLuauCode(title, type) {
         if (!selected.includes(block)) selected.push(block);
     }
 
-    let code = `-- CORE.GG PROFESSIONAL SUITE\n-- Resource: ${title}\n-- Type: ${type.toUpperCase()}\n-- Hash: ${hash}\n\n`;
+    const pattern = ["OOP", "FUNCTIONAL", "SINGLETON"][Math.floor(Math.random() * 3)];
+    let code = `-- CORE.GG PROFESSIONAL SUITE\n-- Resource: ${title}\n-- Type: ${type.toUpperCase()}\n\n`;
 
-    const structures = ["OOP", "FUNCTIONAL", "SINGLETON"];
-    const pattern = structures[Math.floor(Math.random() * structures.length)];
-
-    try {
-        if (pattern === "OOP") {
-            let className = title.replace(/[^a-zA-Z]/g, '');
-            code += `local ${className} = {}\n${className}.__index = ${className}\n\n`;
-            code += `function ${className}.new()\n    local self = setmetatable({}, ${className})\n    self.Name = "${title}"\n    self.Hash = "${hash}"\n    return self\nend\n\n`;
-            selected.forEach(b => code += b.replace(/self:/g, `${className}:`) + "\n\n");
-            code += `return ${className}`;
-        } else if (pattern === "FUNCTIONAL") {
-            let className = title.replace(/[^a-zA-Z]/g, '');
-            code += `local ${className} = (function()\n    local exports = {}\n    \n`;
-            selected.forEach((b, i) => {
-                let match = b.match(/function self:(.+)\(/);
-                if (match) {
-                    code += b.replace(/function self:(.+)\(/g, `local function method_${i}(`) + "\n\n";
-                    code += `    exports.${match[1]} = method_${i}\n`;
-                }
-            });
-            code += `    \n    return exports\nend)()\n\nreturn ${className}`;
-        } else {
-            code += `local Service = {\n    Name = "${title}",\n    Hash = "${hash}",\n    Active = true\n}\n\n`;
-            selected.forEach(b => {
-                code += b.replace(/function self:(.+)\((.*)\)/g, `function Service:$1($2)`) + "\n\n";
-            });
-            code += `return Service`;
-        }
-    } catch (e) {
-        code += `-- Generation error: ${e.message}\nreturn {}`;
+    if (pattern === "OOP") {
+        let className = title.replace(/[^a-zA-Z]/g, '');
+        code += `local ${className} = {}\n${className}.__index = ${className}\n\n`;
+        code += `function ${className}.new()\n    local self = setmetatable({}, ${className})\n    return self\nend\n\n`;
+        selected.forEach(b => code += b.replace(/self:/g, `${className}:`) + "\n\n");
+        code += `return ${className}`;
+    } else if (pattern === "FUNCTIONAL") {
+        code += `local exports = {}\n\n`;
+        selected.forEach((b, i) => {
+            let match = b.match(/function self:(.+)\(/);
+            if (match) {
+                code += b.replace(/function self:(.+)\(/g, `local function method_${i}(`) + "\n\n";
+                code += `exports.${match[1]} = method_${i}\n`;
+            }
+        });
+        code += `\nreturn exports`;
+    } else {
+        code += `local Service = {}\n\n`;
+        selected.forEach(b => code += b.replace(/function self:(.+)\((.*)\)/g, `function Service:$1($2)`) + "\n\n");
+        code += `return Service`;
     }
-    
     return code;
 }
 
 function initData() {
-    let titles = new Set();
     for (const [key, config] of Object.entries(CATEGORIES)) {
         for (let i = 0; i < config.count; i++) {
-            let title = "";
-            do {
-                let p = config.prefix[Math.floor(Math.random() * config.prefix.length)];
-                let s = config.suffix[Math.floor(Math.random() * config.suffix.length)];
-                title = `${p} ${s}`;
-            } while (titles.has(title));
-            titles.add(title);
-
+            let p = config.prefix[Math.floor(Math.random() * config.prefix.length)];
+            let s = config.suffix[Math.floor(Math.random() * config.suffix.length)];
             GENERATED_DATA[key].push({
-                title: title,
+                title: `${p} ${s}`,
                 desc: `Professional ${key} implementation.`,
                 icon: config.icon,
                 premium: Math.random() < 0.85,
                 type: key
-                // source is NOT generated here to save memory/CPU
             });
         }
     }
 }
 
 function renderTools(filter = "") {
-    const sections = {
-        'core-modules-grid': GENERATED_DATA.modules,
-        'server-scripts-grid': GENERATED_DATA.servers,
-        'client-scripts-grid': GENERATED_DATA.clients
-    };
-
+    const sections = { 'core-modules-grid': GENERATED_DATA.modules, 'server-scripts-grid': GENERATED_DATA.servers, 'client-scripts-grid': GENERATED_DATA.clients };
     for (const [gridId, data] of Object.entries(sections)) {
         const grid = document.getElementById(gridId);
         if (!grid) continue;
-        
-        // Fast filtering
-        const filtered = filter ? data.filter(t => 
-            t.title.toLowerCase().includes(filter.toLowerCase()) || 
-            t.desc.toLowerCase().includes(filter.toLowerCase())
-        ) : data;
-
-        // Use a DocumentFragment for better performance
-        const fragment = document.createDocumentFragment();
-        filtered.forEach(t => {
-            const card = document.createElement('div');
-            card.className = `glass tool-card ${t.premium ? 'premium-card' : ''}`;
-            card.innerHTML = `
+        const filtered = filter ? data.filter(t => t.title.toLowerCase().includes(filter.toLowerCase())) : data;
+        grid.innerHTML = filtered.map(t => `
+            <div class="glass tool-card ${t.premium ? 'premium-card' : ''}" onclick="handleToolClick('${t.type}', '${t.title}')">
                 <div class="tool-icon"><i class="fas ${t.icon}"></i></div>
                 ${t.premium ? '<div class="premium-tag"><i class="fas fa-crown"></i> PREMIUM</div>' : ''}
                 <h4>${t.title}</h4>
                 <p>${t.desc}</p>
-            `;
-            card.onclick = () => {
-                if (t.premium && !isPremiumUser) {
-                    window.showToast("Premium license required.", "error");
-                    return;
-                }
-                // Generate source only when needed
-                if (!t.source) t.source = generateLuauCode(t.title, t.type);
-                openWorkspace(t);
-            };
-            fragment.appendChild(card);
-        });
-        
-        grid.innerHTML = '';
-        grid.appendChild(fragment);
+            </div>
+        `).join('');
     }
 }
 
-function openWorkspace(tool) {
-    const wsTitle = document.getElementById('ws-title');
-    const wsOverlay = document.getElementById('workspace-overlay');
-    const wsOutput = document.getElementById('ws-output');
-    const runBtn = document.getElementById('ws-run-btn');
-
-    if (wsTitle) wsTitle.innerText = tool.title;
-    if (wsOverlay) wsOverlay.style.display = 'flex';
-    if (wsOutput) wsOutput.value = "";
-    
-    if (runBtn) {
-        runBtn.onclick = () => {
-            if (wsOutput) wsOutput.value = tool.source;
-            window.showToast("Source code generated.", "success");
-            addActivity(`Retrieved ${tool.title}`);
-        };
+function handleToolClick(type, title) {
+    const tool = GENERATED_DATA[type].find(t => t.title === title);
+    if (tool.premium && !isPremiumUser) {
+        showToast("Premium license required.", "error");
+        return;
     }
-}
-
-function addActivity(text) {
-    const list = document.getElementById('recent-activity-list');
-    if (!list) return;
-    const item = document.createElement('div');
-    item.style.cssText = "padding: 0.8rem; border-bottom: 1px solid var(--glass-border); font-size: 0.85rem; color: var(--text-dim);";
-    item.innerHTML = `<span style="color: var(--primary-neon); font-weight:700;">[INFO]</span> ${text}`;
-    list.prepend(item);
-    if (list.children.length > 8) list.lastChild.remove();
-}
-
-function startBroadcasts() {
-    const ticker = document.getElementById('system-ticker');
-    if (!ticker) return;
-    let index = 0;
-    setInterval(() => {
-        ticker.style.opacity = '0';
-        setTimeout(() => {
-            ticker.innerText = BROADCASTS[index];
-            ticker.style.opacity = '1';
-            index = (index + 1) % BROADCASTS.length;
-        }, 500);
-    }, 15000);
+    if (!tool.source) tool.source = generateLuauCode(tool.title, tool.type);
+    document.getElementById('ws-title').innerText = tool.title;
+    document.getElementById('workspace-overlay').style.display = 'flex';
+    document.getElementById('ws-output').value = "";
+    document.getElementById('ws-run-btn').onclick = () => {
+        document.getElementById('ws-output').value = tool.source;
+        showToast("Source generated.", "success");
+    };
 }
 
 function updateAuthUI(user) {
     currentUser = user;
     const profile = document.getElementById('user-profile');
     const authBtns = document.getElementById('auth-buttons');
-    const adminNav = document.getElementById('nav-admin');
-
     if (!profile || !authBtns) return;
-
     if (user) {
         profile.style.display = 'flex';
         authBtns.style.display = 'none';
         isPremiumUser = user.email === 'jayden.ims.monte@gmail.com' || user.premium;
-        
-        const emailEl = document.getElementById('user-email');
-        const badgeEl = document.getElementById('user-badge');
-        
-        if (emailEl && badgeEl) {
-            if (user.email === 'jayden.ims.monte@gmail.com') {
-                emailEl.innerHTML = `${user.email} <span style="color: var(--hack-neon);">[OWNER]</span>`;
-                badgeEl.innerText = "OWNER";
-                badgeEl.style.color = "var(--hack-neon)";
-                if (adminNav) adminNav.style.display = 'flex';
-            } else if (isPremiumUser) {
-                emailEl.innerHTML = `${user.email} <span style="color: var(--accent-gold);">[PREMIUM]</span>`;
-                badgeEl.innerText = "CORE PREMIUM";
-                badgeEl.style.color = "var(--accent-gold)";
-            } else {
-                emailEl.innerText = user.email;
-                badgeEl.innerText = "FREE USER";
-            }
-        }
+        document.getElementById('user-email').innerText = user.email;
+        document.getElementById('user-badge').innerText = user.email === 'jayden.ims.monte@gmail.com' ? "OWNER" : (isPremiumUser ? "PREMIUM" : "FREE USER");
+        if (user.email === 'jayden.ims.monte@gmail.com') document.getElementById('nav-admin').style.display = 'flex';
     } else {
         profile.style.display = 'none';
         authBtns.style.display = 'flex';
-        if (adminNav) adminNav.style.display = 'none';
-        isPremiumUser = false;
     }
 }
 
-let searchTimeout = null;
 window.onload = () => {
     initData();
-    // Render only the active tab initially to save time? 
-    // No, let's render all but use fragments for speed.
     renderTools();
-    startBroadcasts();
-    
     const saved = localStorage.getItem('zenith_usr');
     if (saved) updateAuthUI(JSON.parse(saved));
-
-    const searchInput = document.getElementById('search-input');
-    if (searchInput) {
-        searchInput.oninput = (e) => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => renderTools(e.target.value), 200);
-        };
-    }
-    
-    document.querySelectorAll('.nav-item').forEach(i => {
-        i.onclick = () => { if(i.dataset.target) window.switchTab(i.dataset.target); };
-    });
-
-    const authForm = document.getElementById('auth-form');
-    if (authForm) {
-        authForm.onsubmit = (e) => {
-            e.preventDefault();
-            const email = document.getElementById('auth-email').value;
-            const user = { email, premium: email === 'jayden.ims.monte@gmail.com' };
-            localStorage.setItem('zenith_usr', JSON.stringify(user));
-            updateAuthUI(user);
-            window.closeModal('auth-modal');
-            window.showToast("Authentication successful.", "success");
-        };
-    }
+    document.getElementById('search-input').oninput = (e) => renderTools(e.target.value);
+    document.getElementById('auth-form').onsubmit = (e) => {
+        e.preventDefault();
+        const email = document.getElementById('auth-email').value;
+        const user = { email, premium: email === 'jayden.ims.monte@gmail.com' };
+        localStorage.setItem('zenith_usr', JSON.stringify(user));
+        updateAuthUI(user);
+        closeModal('auth-modal');
+        showToast("Logged in.", "success");
+    };
 };
