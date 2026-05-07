@@ -1,4 +1,4 @@
-// --- CORE.GG PROFESSIONAL SUITE V7.2 ---
+// --- CORE.GG PROFESSIONAL SUITE V7.2 (OPTIMIZED) ---
 // Credits Who made this: Zenith.gg
 
 const CATEGORIES = {
@@ -45,8 +45,7 @@ const BROADCASTS = [
     "New premium license activated.",
     "System Status: All nodes operational.",
     "Security Matrix: No anomalies detected.",
-    "Database integrity verified.",
-    "Session established for user: "
+    "Database integrity verified."
 ];
 
 const GENERATED_DATA = { modules: [], servers: [], clients: [] };
@@ -112,6 +111,7 @@ window.showToast = function(msg, type = 'info') {
     }, 3000);
 };
 
+// --- LAZY GENERATION ENGINE ---
 function generateLuauCode(title, type) {
     let hash = Math.random().toString(36).substring(2, 10).toUpperCase();
     let lowerTitle = title.toLowerCase();
@@ -160,7 +160,7 @@ function generateLuauCode(title, type) {
             code += `return Service`;
         }
     } catch (e) {
-        code += `-- Error generating structural pattern: ${e.message}\nreturn {}`;
+        code += `-- Generation error: ${e.message}\nreturn {}`;
     }
     
     return code;
@@ -180,10 +180,11 @@ function initData() {
 
             GENERATED_DATA[key].push({
                 title: title,
-                desc: `Professional ${key} implementation for high-performance applications.`,
+                desc: `Professional ${key} implementation.`,
                 icon: config.icon,
                 premium: Math.random() < 0.85,
-                source: generateLuauCode(title, key)
+                type: key
+                // source is NOT generated here to save memory/CPU
             });
         }
     }
@@ -199,16 +200,18 @@ function renderTools(filter = "") {
     for (const [gridId, data] of Object.entries(sections)) {
         const grid = document.getElementById(gridId);
         if (!grid) continue;
-        grid.innerHTML = '';
         
-        const filtered = data.filter(t => 
+        // Fast filtering
+        const filtered = filter ? data.filter(t => 
             t.title.toLowerCase().includes(filter.toLowerCase()) || 
             t.desc.toLowerCase().includes(filter.toLowerCase())
-        );
+        ) : data;
 
+        // Use a DocumentFragment for better performance
+        const fragment = document.createDocumentFragment();
         filtered.forEach(t => {
             const card = document.createElement('div');
-            card.className = `glass tool-card ${t.premium ? 'premium-card' : ''} animate-in`;
+            card.className = `glass tool-card ${t.premium ? 'premium-card' : ''}`;
             card.innerHTML = `
                 <div class="tool-icon"><i class="fas ${t.icon}"></i></div>
                 ${t.premium ? '<div class="premium-tag"><i class="fas fa-crown"></i> PREMIUM</div>' : ''}
@@ -220,22 +223,25 @@ function renderTools(filter = "") {
                     window.showToast("Premium license required.", "error");
                     return;
                 }
+                // Generate source only when needed
+                if (!t.source) t.source = generateLuauCode(t.title, t.type);
                 openWorkspace(t);
             };
-            grid.appendChild(card);
+            fragment.appendChild(card);
         });
+        
+        grid.innerHTML = '';
+        grid.appendChild(fragment);
     }
 }
 
 function openWorkspace(tool) {
     const wsTitle = document.getElementById('ws-title');
-    const wsDesc = document.getElementById('ws-desc');
     const wsOverlay = document.getElementById('workspace-overlay');
     const wsOutput = document.getElementById('ws-output');
     const runBtn = document.getElementById('ws-run-btn');
 
     if (wsTitle) wsTitle.innerText = tool.title;
-    if (wsDesc) wsDesc.innerText = "Source Code Preview";
     if (wsOverlay) wsOverlay.style.display = 'flex';
     if (wsOutput) wsOutput.value = "";
     
@@ -265,7 +271,7 @@ function startBroadcasts() {
     setInterval(() => {
         ticker.style.opacity = '0';
         setTimeout(() => {
-            ticker.innerText = BROADCASTS[index] + (currentUser ? currentUser.email : "");
+            ticker.innerText = BROADCASTS[index];
             ticker.style.opacity = '1';
             index = (index + 1) % BROADCASTS.length;
         }, 500);
@@ -311,8 +317,11 @@ function updateAuthUI(user) {
     }
 }
 
+let searchTimeout = null;
 window.onload = () => {
     initData();
+    // Render only the active tab initially to save time? 
+    // No, let's render all but use fragments for speed.
     renderTools();
     startBroadcasts();
     
@@ -320,7 +329,12 @@ window.onload = () => {
     if (saved) updateAuthUI(JSON.parse(saved));
 
     const searchInput = document.getElementById('search-input');
-    if (searchInput) searchInput.oninput = (e) => renderTools(e.target.value);
+    if (searchInput) {
+        searchInput.oninput = (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => renderTools(e.target.value), 200);
+        };
+    }
     
     document.querySelectorAll('.nav-item').forEach(i => {
         i.onclick = () => { if(i.dataset.target) window.switchTab(i.dataset.target); };
