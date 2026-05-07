@@ -1,4 +1,4 @@
-// --- CORE.GG PROFESSIONAL SUITE V8.0 (MAXIMUM UNIQUENESS) ---
+// --- CORE.GG PROFESSIONAL SUITE V8.1 (ABSOLUTE UNIQUENESS) ---
 // Credits Who made this: Zenith.gg
 
 const CATEGORIES = {
@@ -8,39 +8,31 @@ const CATEGORIES = {
     tools: { count: 40, icon: 'fa-tools', prefix: ["LBI", "Luau", "XOR", "Minifier", "Beautifier", "Deobfuscator", "Obfuscator", "Decompiler", "Encryption", "String"], suffix: ["Suite", "Tool", "Utility", "Processor", "Converter", "Hardener", "Analyzer", "Refactorer", "Optimizer", "Encoder"] }
 };
 
-const SNIPPETS = {
+const LOGIC_SEEDS = {
     combat: [
-        `function self:CastRaycast(o, d, r)\n    local p = RaycastParams.new()\n    p.FilterType = Enum.RaycastFilterType.Exclude\n    return workspace:Raycast(o, d * r, p)\nend`,
-        `function self:CheckMagnitude(t)\n    return (self.Root.Position - t.Position).Magnitude < self.Range\nend`,
-        `function self:ApplyImpulse(t, p)\n    t:ApplyImpulse((t.Position - self.Root.Position).Unit * p)\nend`
+        { name: "CastHitbox", code: "function self:CastHitbox(origin, dir, dist)\n    local params = RaycastParams.new()\n    params.FilterType = Enum.RaycastFilterType.Exclude\n    local res = workspace:Raycast(origin, dir * dist, params)\n    if res then self:OnCollision(res.Instance) end\nend" },
+        { name: "VerifyRange", code: "function self:VerifyRange(target)\n    local mag = (self.Root.Position - target.Position).Magnitude\n    return mag <= self.Config.MaxDistance\nend" },
+        { name: "ApplyForce", code: "function self:ApplyForce(target, power)\n    local attachment = Instance.new('Attachment', target)\n    local force = Instance.new('VectorForce', target)\n    force.Force = (target.Position - self.Root.Position).Unit * power\n    force.Attachment0 = attachment\n    task.wait(0.1)\n    force:Destroy(); attachment:Destroy()\nend" }
     ],
     data: [
-        `function self:GetAsync(k)\n    local s, d = pcall(function() return self.DS:GetAsync(k) end)\n    return s and d or nil\nend`,
-        `function self:SetAsync(k, v)\n    return pcall(function() self.DS:SetAsync(k, v) end)\nend`,
-        `function self:UpdateProfile(p, d)\n    self.Profiles[p] = d\n    self.Events.Updated:Fire(p, d)\nend`
+        { name: "LoadProfile", code: "function self:LoadProfile(userId)\n    local success, data = pcall(function() return self.Store:GetAsync('User_'..userId) end)\n    self.Cache[userId] = success and data or self.Template\nend" },
+        { name: "PushUpdate", code: "function self:PushUpdate(userId, key, value)\n    if not self.Cache[userId] then return end\n    self.Cache[userId][key] = value\n    self.Signal:Fire(userId, key, value)\nend" }
     ],
     network: [
-        `function self:Send(p, a, ...)\n    self.Remote:FireClient(p, {Action = a, Args = {...}})\nend`,
-        `function self:Invoke(p, a, ...)\n    return self.Function:InvokeClient(p, a, ...)\nend`,
-        `function self:Register(a, h)\n    self.Handlers[a] = h\nend`
+        { name: "Transmit", code: "function self:Transmit(player, packet)\n    if typeof(packet) ~= 'table' then return end\n    self.Remote:FireClient(player, packet)\nend" },
+        { name: "Listen", code: "function self:Listen(callback)\n    self.Remote.OnServerEvent:Connect(function(player, data)\n        if self:Validate(player, data) then callback(player, data) end\n    end)\nend" }
     ],
-    camera: [
-        `function self:SetFOV(v, t)\n    self.Tween:Create(self.Cam, TweenInfo.new(t), {FieldOfView = v}):Play()\nend`,
-        `function self:LerpTo(cf, t)\n    self.Cam.CFrame = self.Cam.CFrame:Lerp(cf, t)\nend`,
-        `function self:Shake(m)\n    self.Offset = Vector3.new(math.random(-m,m), math.random(-m,m), 0)\nend`
+    visual: [
+        { name: "TweenField", code: "function self:TweenField(property, target, duration)\n    self.TweenService:Create(self.Object, TweenInfo.new(duration), {[property] = target}):Play()\nend" },
+        { name: "SetCFrame", code: "function self:SetCFrame(newCF, speed)\n    self.Object.CFrame = self.Object.CFrame:Lerp(newCF, speed)\nend" }
     ],
     security: [
-        `function self:Validate(p, d)\n    if os.clock() - d.Time > 1 then self:Kick(p, "Timeout") return false end\n    return true\nend`,
-        `function self:CheckSpeed(p)\n    if p.Character.Humanoid.WalkSpeed > 20 then self:Ban(p) end\nend`
+        { name: "DetectAnomaly", code: "function self:DetectAnomaly(player)\n    local hum = player.Character:FindFirstChild('Humanoid')\n    if hum and hum.WalkSpeed > 30 then self:Flag(player, 'SPEED') end\nend" },
+        { name: "Heartbeat", code: "function self:Heartbeat()\n    while task.wait(1) do self:CheckAllNodes() end\nend" }
     ],
     tools: [
-        `function self:XOR(s, k)\n    local out = ""\n    for i=1, #s do\n        out ..= string.char(bit32.bxor(s:byte(i), k:byte((i-1)%#k+1)))\n    end\n    return out\nend`,
-        `function self:Minify(c)\n    return c:gsub("%s+", " "):gsub("%-%-.-\\n", "")\nend`,
-        `function self:Decompile(b)\n    print("[CORE] Processing bytecode..."); return "-- Successfully decompiled."\nend`
-    ],
-    generic: [
-        `function self:Init()\n    self.Active = true\n    print("[CORE] " .. self.Name .. " loaded.")\nend`,
-        `function self:Destroy()\n    self.Active = false\nend`
+        { name: "Encrypt", code: "function self:Encrypt(str, key)\n    local result = ''\n    for i=1, #str do\n        result ..= string.char(bit32.bxor(str:byte(i), key:byte((i-1)%#key+1)))\n    end\n    return result\nend" },
+        { name: "Decompile", code: "function self:Decompile(bytecode)\n    print('[CORE] Running decompiler engine...'); return '-- SOURCE RESTORED'\nend" }
     ]
 };
 
@@ -49,40 +41,45 @@ let isPremiumUser = false;
 let currentUser = null;
 let activeLicenses = JSON.parse(localStorage.getItem('core_licenses') || '[]');
 let stats = JSON.parse(localStorage.getItem('core_stats') || '{"extractions": 0, "session_traffic": 0}');
-let hwid = localStorage.getItem('core_hwid') || 'HWID-' + Math.random().toString(36).substring(2, 12).toUpperCase();
+let hwid = localStorage.getItem('core_hwid') || 'HWID-' + Math.random().toString(36).substring(2, 10).toUpperCase();
 
-// --- ULTRA-UNIQUE SCRIPT ENGINE ---
+// --- ABSOLUTE UNIQUENESS ENGINE ---
 function generateLuauCode(title, type) {
     const lower = title.toLowerCase();
     const className = title.replace(/[^a-zA-Z]/g, '');
-    let code = `-- CORE.GG PROFESSIONAL SUITE V8.0\n-- RESOURCE: ${title.toUpperCase()}\n-- ID: ${Math.random().toString(36).substring(2, 10).toUpperCase()}\n\n`;
+    let code = `-- CORE.GG PROFESSIONAL RESOURCE\n-- [ ${title.toUpperCase()} ]\n-- UUID: ${Math.random().toString(36).substring(2, 12).toUpperCase()}\n\n`;
 
-    let logic = [...SNIPPETS.generic];
-    if (lower.includes("combat")) logic.push(...SNIPPETS.combat);
-    else if (lower.includes("data") || lower.includes("economy") || lower.includes("store")) logic.push(...SNIPPETS.data);
-    else if (lower.includes("network") || lower.includes("api") || lower.includes("relay")) logic.push(...SNIPPETS.network);
-    else if (lower.includes("camera") || lower.includes("visual")) logic.push(...SNIPPETS.camera);
-    else if (lower.includes("secure") || lower.includes("valid") || lower.includes("hardener")) logic.push(...SNIPPETS.security);
-    else if (type === 'tools' || lower.includes("obf") || lower.includes("decompiler")) logic.push(...SNIPPETS.tools);
+    // Pick logic pool
+    let pool = [];
+    if (lower.includes("combat")) pool = LOGIC_SEEDS.combat;
+    else if (lower.includes("data") || lower.includes("store")) pool = LOGIC_SEEDS.data;
+    else if (lower.includes("network") || lower.includes("relay") || lower.includes("api")) pool = LOGIC_SEEDS.network;
+    else if (lower.includes("visual") || lower.includes("camera")) pool = LOGIC_SEEDS.visual;
+    else if (lower.includes("secure") || lower.includes("valid")) pool = LOGIC_SEEDS.security;
+    else if (type === 'tools' || lower.includes("obf") || lower.includes("decompiler")) pool = LOGIC_SEEDS.tools;
+    else pool = [LOGIC_SEEDS.security[1], LOGIC_SEEDS.combat[1]]; // Mix for generic
 
-    const structure = ["CLASS", "SERVICE", "MODULE"][Math.floor(Math.random() * 3)];
-    
-    if (structure === "CLASS") {
-        code += `local ${className} = {}\n${className}.__index = ${className}\n\nfunction ${className}.new(...)\n    local self = setmetatable({}, ${className})\n    self.Name = "${title}"\n    self:Init(...)\n    return self\nend\n\n`;
-        logic.forEach(b => code += b.replace(/function self:/g, `function ${className}:`) + "\n\n");
+    const pattern = ["OOP", "SINGLETON", "FUNCTIONAL"][Math.floor(Math.random() * 3)];
+
+    if (pattern === "OOP") {
+        code += `local ${className} = {}\n${className}.__index = ${className}\n\nfunction ${className}.new(...)\n    local self = setmetatable({}, ${className})\n    self.Name = "${title}"\n    self.Active = true\n    return self\nend\n\n`;
+        pool.forEach(p => {
+            let funcName = p.name + "_" + Math.random().toString(36).substring(2, 5);
+            code += p.code.replace(/function self:(.+)\(/, `function ${className}:${funcName}(`) + "\n\n";
+        });
         code += `return ${className}`;
-    } else if (structure === "SERVICE") {
-        code += `local ${className} = { _NAME = "${title}", _ACTIVE = true }\n\n`;
-        logic.forEach(b => code += b.replace(/function self:/g, `function ${className}:`) + "\n\n");
+    } else if (pattern === "SINGLETON") {
+        code += `local ${className} = { _VERSION = "8.1" }\n\n`;
+        pool.forEach(p => {
+            let funcName = p.name.toLowerCase();
+            code += p.code.replace(/function self:(.+)\(/, `function ${className}:${funcName}(`) + "\n\n";
+        });
         code += `return ${className}`;
     } else {
-        code += `local exports = {}\n\n`;
-        logic.forEach((b, i) => {
-            let m = b.match(/function self:(.+)\(/);
-            if (m) {
-                code += b.replace(/function self:(.+)\(/, `local function internal_${i}_${m[1]}(`) + "\n\n";
-                code += `exports.${m[1]} = internal_${i}_${m[1]}\n`;
-            }
+        code += `local exports = { _INFO = "${title}" }\n\n`;
+        pool.forEach((p, i) => {
+            code += p.code.replace(/function self:(.+)\(/, `local function internal_${i}(`) + "\n\n";
+            code += `exports.${p.name} = internal_${i}\n`;
         });
         code += `\nreturn exports`;
     }
@@ -105,9 +102,8 @@ window.signOut = function() { localStorage.removeItem('zenith_usr'); location.re
 window.closeWorkspace = function() { document.getElementById('workspace-overlay').style.display = 'none'; };
 window.copyOutput = function() { 
     const out = document.getElementById('ws-output'); 
-    out.select(); 
-    document.execCommand('copy'); 
-    window.showToast("Copied Source.", "success"); 
+    out.select(); document.execCommand('copy'); 
+    window.showToast("Source Copied.", "success"); 
 };
 
 window.showToast = function(msg, type = 'info') {
@@ -124,12 +120,12 @@ window.showToast = function(msg, type = 'info') {
 window.redeemLicense = function() {
     const key = document.getElementById('redeem-key-input').value.trim();
     const license = activeLicenses.find(l => l.key === key);
-    if (!license) { window.showToast("Invalid key.", "error"); return; }
+    if (!license) { window.showToast("Invalid Key.", "error"); return; }
     if (license.hwid && license.hwid !== hwid) { window.showToast("HWID Mismatch.", "error"); return; }
     license.hwid = hwid; license.status = 'Claimed'; license.redeemed_by = currentUser.email;
     localStorage.setItem('core_licenses', JSON.stringify(activeLicenses));
     currentUser.premium = true; localStorage.setItem('zenith_usr', JSON.stringify(currentUser));
-    updateAuthUI(currentUser); window.showToast("Premium Activated!", "success");
+    updateAuthUI(currentUser); window.showToast("Premium Active!", "success");
 };
 
 window.generateLicense = function() {
@@ -171,7 +167,7 @@ function initData() {
                 title = `${p} ${s}`;
             } while (used.has(title));
             used.add(title);
-            GENERATED_DATA[key].push({ title, desc: `Professional ${key} implementation.`, icon: config.icon, premium: Math.random() < 0.8, type: key });
+            GENERATED_DATA[key].push({ title, desc: `Professional ${key} resource.`, icon: config.icon, premium: Math.random() < 0.8, type: key });
         }
     }
 }
@@ -237,7 +233,7 @@ window.onload = () => {
         e.preventDefault();
         const u = { email: document.getElementById('auth-email').value, pass: document.getElementById('auth-password').value, premium: document.getElementById('auth-email').value === 'jayden.ims.monte@gmail.com', created_at: Date.now() };
         localStorage.setItem('zenith_usr', JSON.stringify(u));
-        updateAuthUI(u); closeModal('auth-modal'); window.showToast("Welcome to CORE.", "success");
+        updateAuthUI(u); closeModal('auth-modal'); window.showToast("Initialized.", "success");
     };
     updateRealTimeStats();
 };
