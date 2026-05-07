@@ -155,8 +155,18 @@ function updateAuthUI(user) {
         profile.style.display = 'flex';
         authBtns.style.display = 'none';
         isPremiumUser = user.email === 'jayden.ims.monte@gmail.com' || user.premium;
+        
+        // Hide premium prompts
+        const dashPremium = document.getElementById('dashboard-premium-card');
+        const settingsPremium = document.getElementById('settings-premium-info');
+        if (isPremiumUser) {
+            if (dashPremium) dashPremium.style.display = 'none';
+            if (settingsPremium) settingsPremium.style.display = 'none';
+        }
+
         document.getElementById('user-email').innerText = user.email;
         document.getElementById('user-badge').innerText = user.email === 'jayden.ims.monte@gmail.com' ? "OWNER" : (isPremiumUser ? "PREMIUM" : "FREE");
+        
         if (user.email === 'jayden.ims.monte@gmail.com') {
             const adminNav = document.getElementById('nav-admin');
             if (adminNav) adminNav.style.display = 'flex';
@@ -164,6 +174,11 @@ function updateAuthUI(user) {
     } else {
         profile.style.display = 'none';
         authBtns.style.display = 'flex';
+        // Reset visibility
+        const dashPremium = document.getElementById('dashboard-premium-card');
+        const settingsPremium = document.getElementById('settings-premium-info');
+        if (dashPremium) dashPremium.style.display = 'block';
+        if (settingsPremium) settingsPremium.style.display = 'block';
     }
 }
 
