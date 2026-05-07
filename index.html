@@ -115,10 +115,36 @@
             </div>
         </section>
 
-        <!-- ADMIN PANEL -->
+        <!-- ADMIN -->
         <section id="admin" class="dashboard-section">
-            <div class="section-header"><h2>ZENITH <span style="color: var(--hack-neon);">Admin</span></h2><p>Owner-only 30+ feature control panel for maximum authority.</p></div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 4rem;">
+            <div class="section-header"><h2>ZENITH <span style="color: var(--hack-neon);">Admin Console</span></h2><p>Deep system controls for platform owners.</p></div>
+            
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-top: 4rem;">
+                <div class="glass" style="padding: 2rem; border-color: var(--hack-neon);">
+                    <h4 style="color: var(--hack-neon); font-size: 0.8rem; margin-bottom: 1rem;">ACTIVE NODES</h4>
+                    <p style="font-size: 2.5rem; font-weight: 900;">1,024</p>
+                </div>
+                <div class="glass" style="padding: 2rem; border-color: var(--hack-neon);">
+                    <h4 style="color: var(--hack-neon); font-size: 0.8rem; margin-bottom: 1rem;">TRAFFIC (24H)</h4>
+                    <p style="font-size: 2.5rem; font-weight: 900;">85.2k</p>
+                </div>
+                <div class="glass" style="padding: 2rem; border-color: var(--hack-neon);">
+                    <h4 style="color: var(--hack-neon); font-size: 0.8rem; margin-bottom: 1rem;">LICENSES ACTIVE</h4>
+                    <p style="font-size: 2.5rem; font-weight: 900;">12.4k</p>
+                </div>
+            </div>
+
+            <div class="glass" style="padding: 3rem; margin-top: 3rem;">
+                <h3 style="margin-bottom: 2rem;">Platform Controls</h3>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                    <button class="btn btn-outline" style="border-color: var(--hack-neon); color: var(--hack-neon);" onclick="showToast('BROADCAST SENT', 'success')">Global Broadcast</button>
+                    <button class="btn btn-outline" style="border-color: var(--hack-neon); color: var(--hack-neon);" onclick="showToast('CACHE PURGED', 'success')">Purge Cache</button>
+                    <button class="btn btn-outline" style="border-color: var(--hack-neon); color: var(--hack-neon);" onclick="showToast('SECURITY LOCKDOWN ACTIVE', 'error')">System Lockdown</button>
+                    <button class="btn btn-outline" style="border-color: var(--hack-neon); color: var(--hack-neon);" onclick="showToast('DATABASE SYNCED', 'success')">Sync Database</button>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
                 <div class="glass" style="padding: 2.5rem;">
                     <h3 style="font-family:'Outfit'; color: var(--accent-gold); margin-bottom: 1.5rem;"><i class="fas fa-key"></i> License Generation</h3>
                     <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;"><input type="text" class="auth-input" style="flex:1; margin:0;" placeholder="Days valid (e.g. 30, Lifetime)"><button class="btn btn-primary" onclick="showToast('Generated key: ZENITH-X9', 'success')">Generate Key</button></div>
