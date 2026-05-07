@@ -121,9 +121,9 @@
                     <div class="glass" style="padding: 2.5rem;">
                         <h3 style="margin-bottom: 2rem; font-family: 'Outfit';"><i class="fas fa-user-circle"></i> Account Statistics</h3>
                         <div style="display: flex; flex-direction: column; gap: 1rem;">
-                            <div style="display: flex; justify-content: space-between; padding-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border);"><span style="color: var(--text-dim);">Total Extractions</span><span style="font-weight: 800;">42</span></div>
-                            <div style="display: flex; justify-content: space-between; padding-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border);"><span style="color: var(--text-dim);">Account Age</span><span style="font-weight: 800;">14 Days</span></div>
-                            <div style="display: flex; justify-content: space-between;"><span style="color: var(--text-dim);">Status</span><span style="font-weight: 800; color: var(--accent-gold);">ACTIVE</span></div>
+                            <div style="display: flex; justify-content: space-between; padding-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border);"><span style="color: var(--text-dim);">Total Extractions</span><span id="stat-extractions" style="font-weight: 800;">0</span></div>
+                            <div style="display: flex; justify-content: space-between; padding-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border);"><span style="color: var(--text-dim);">Account Age</span><span id="stat-age" style="font-weight: 800;">0d 0h</span></div>
+                            <div style="display: flex; justify-content: space-between;"><span style="color: var(--text-dim);">Status</span><span id="stat-status" style="font-weight: 800; color: var(--accent-gold);">VERIFIED</span></div>
                         </div>
                     </div>
 
@@ -160,7 +160,14 @@
         <section id="admin" class="dashboard-section">
             <div class="section-header"><h2>Admin <span style="color: var(--hack-neon);">Console</span></h2><p>Deep system controls for platform owners.</p></div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 4rem;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-top: 4rem;">
+                <div class="glass" style="padding: 1.5rem; border-color: var(--hack-neon);"><h4 style="color:var(--hack-neon); font-size:0.7rem; margin-bottom:0.5rem;">ACTIVE NODES</h4><p id="admin-nodes" style="font-size: 2rem; font-weight: 900;">124</p></div>
+                <div class="glass" style="padding: 1.5rem; border-color: var(--hack-neon);"><h4 style="color:var(--hack-neon); font-size:0.7rem; margin-bottom:0.5rem;">SESSION TRAFFIC</h4><p id="admin-traffic" style="font-size: 2rem; font-weight: 900;">0.0k</p></div>
+                <div class="glass" style="padding: 1.5rem; border-color: var(--hack-neon);"><h4 style="color:var(--hack-neon); font-size:0.7rem; margin-bottom:0.5rem;">PENDING TICKETS</h4><p style="font-size: 2rem; font-weight: 900;">0</p></div>
+                <div class="glass" style="padding: 1.5rem; border-color: var(--hack-neon);"><h4 style="color:var(--hack-neon); font-size:0.7rem; margin-bottom:0.5rem;">SYS HEALTH</h4><p style="font-size: 2rem; font-weight: 900; color: var(--accent-green);">100%</p></div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem;">
                 <div class="glass" style="padding: 2.5rem;">
                     <h3 style="margin-bottom: 2rem; color: var(--accent-gold);"><i class="fas fa-key"></i> License Manager</h3>
                     <div style="margin-bottom: 2rem;">
@@ -190,8 +197,8 @@
                     <div style="margin-top: 3rem; padding: 2rem; background: rgba(0,0,0,0.4); border-radius: 12px; border: 1px solid var(--glass-border);">
                         <h4 style="color: var(--text-dim); margin-bottom: 1rem; font-size: 0.75rem;">LIVE SYSTEM CONSOLE</h4>
                         <div id="admin-log" style="font-family: monospace; font-size: 0.75rem; color: var(--accent-green);">
-                            <p>[INFO] License Manager loaded.</p>
-                            <p>[INFO] Waiting for admin input...</p>
+                            <p>[INFO] Statistics engine synchronized.</p>
+                            <p>[INFO] All nodes reporting 100% health.</p>
                         </div>
                     </div>
                 </div>
