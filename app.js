@@ -1,4 +1,4 @@
-// --- CORE.GG PROFESSIONAL SUITE V7.3 ---
+// --- CORE.GG PROFESSIONAL SUITE V7.4 ---
 // Credits Who made this: Zenith.gg
 
 const CATEGORIES = {
@@ -15,41 +15,40 @@ const LOGIC_BANKS = {
     ],
     tools: [
         `function self:Obfuscate(source)\n    local b="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"\n    return ((source:gsub('.', function(x)\n        local r,b='',x:byte()\n        for i=8,1,-1 do r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0') end\n        return r;\n    end)..'0000'):gsub('%d%d%d%d%d%d', function(x)\n        if (#x < 6) then return '' end\n        local c=0\n        for i=1,6 do c=c+(x:sub(i,i)=='1' and 2^(6-i) or 0) end\n        return b:sub(c+1,c+1)\n    end)..({ '', '==', '=' })[#source%3+1])\nend`,
-        `function self:Deobfuscate(data)\n    print("[CORE] Initializing LBI Deobfuscator...")\n    task.wait(0.5)\n    return "-- Successfully decompiled " .. #data .. " bytes."\nend`,
+        `function self:Deobfuscate(data)\n    print("[CORE] Initializing Deobfuscator...")\n    return "-- Successfully decompiled " .. #data .. " bytes."\nend`,
         `function self:Minify(source)\n    return source:gsub("%s+", " "):gsub("%-%-.-\\n", "")\nend`
     ],
     generic: [
-        `function self:Init()\n    print("[CORE] Service " .. self.Name .. " initialized.")\n    self.Initialized = true\nend`,
-        `function self:OnStart()\n    task.spawn(function()\n        while self.Active do self:Update() task.wait(1) end\n    end)\nend`
+        `function self:Init()\n    print("[CORE] Service " .. self.Name .. " initialized.")\n    self.Initialized = true\nend`
     ]
 };
-
-const BROADCASTS = [
-    "CORE V7.3: Dev Suite optimized.",
-    "Global cache synchronized.",
-    "New license activated.",
-    "System Status: All 240 nodes operational."
-];
 
 const GENERATED_DATA = { modules: [], servers: [], clients: [], tools: [] };
 let isPremiumUser = false;
 let currentUser = null;
+let activeLicenses = JSON.parse(localStorage.getItem('core_licenses') || '[]');
 
-function switchTab(target) {
+// --- GLOBAL FUNCTIONS ---
+window.switchTab = function(target) {
     document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.dataset.target === target));
     document.querySelectorAll('.dashboard-section').forEach(s => {
         s.classList.toggle('active', s.id === target);
         s.style.display = s.id === target ? 'block' : 'none';
     });
-}
+};
 
-function openAuth() { document.getElementById('auth-modal').style.display = 'flex'; }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-function signOut() { localStorage.removeItem('zenith_usr'); location.reload(); }
-function closeWorkspace() { document.getElementById('workspace-overlay').style.display = 'none'; }
-function copyOutput() { const out = document.getElementById('ws-output'); out.select(); document.execCommand('copy'); showToast("Copied.", "success"); }
+window.openAuth = function() { document.getElementById('auth-modal').style.display = 'flex'; };
+window.closeModal = function(id) { document.getElementById(id).style.display = 'none'; };
+window.signOut = function() { localStorage.removeItem('zenith_usr'); location.reload(); };
+window.closeWorkspace = function() { document.getElementById('workspace-overlay').style.display = 'none'; };
+window.copyOutput = function() { 
+    const out = document.getElementById('ws-output'); 
+    out.select(); 
+    document.execCommand('copy'); 
+    window.showToast("Copied.", "success"); 
+};
 
-function showToast(msg, type = 'info') {
+window.showToast = function(msg, type = 'info') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     toast.className = 'custom-toast';
@@ -57,25 +56,50 @@ function showToast(msg, type = 'info') {
     toast.innerHTML = `<i class="fas fa-info-circle"></i> <span>${msg}</span>`;
     container.appendChild(toast);
     setTimeout(() => { toast.style.animation = 'slideOutRight 0.4s forwards'; setTimeout(() => toast.remove(), 400); }, 3000);
+};
+
+// --- LICENSE MANAGER ---
+window.generateLicense = function() {
+    const duration = document.getElementById('license-duration').value;
+    const key = `CORE-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    
+    activeLicenses.push({ key, duration, status: 'Active', created: new Date().toLocaleDateString() });
+    localStorage.setItem('core_licenses', JSON.stringify(activeLicenses));
+    renderLicenses();
+    window.showToast(`Key Created: ${key}`, "success");
+};
+
+window.revokeLicense = function(key) {
+    activeLicenses = activeLicenses.filter(l => l.key !== key);
+    localStorage.setItem('core_licenses', JSON.stringify(activeLicenses));
+    renderLicenses();
+    window.showToast("License Revoked.", "error");
+};
+
+function renderLicenses() {
+    const list = document.getElementById('license-list');
+    if (!list) return;
+    list.innerHTML = activeLicenses.map(l => `
+        <div class="glass" style="padding: 1rem; margin-bottom: 0.8rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <p style="font-family: monospace; font-weight: 800; color: var(--primary-neon);">${l.key}</p>
+                <p style="font-size: 0.7rem; color: var(--text-dim);">${l.duration} | Created: ${l.created}</p>
+            </div>
+            <button class="btn" style="padding: 0.5rem 1rem; background: rgba(244, 63, 94, 0.1); color: var(--hack-neon);" onclick="revokeLicense('${l.key}')">Revoke</button>
+        </div>
+    `).join('');
 }
 
+// --- GENERATION & DATA ---
 function generateLuauCode(title, type) {
     let code = `-- CORE.GG PROFESSIONAL SUITE\n-- Resource: ${title}\n-- Type: ${type.toUpperCase()}\n\n`;
     let pools = type === 'tools' ? [LOGIC_BANKS.tools] : [LOGIC_BANKS.generic];
     if (title.toLowerCase().includes("combat")) pools.push(LOGIC_BANKS.combat);
-    
     let all = pools.flat();
-    const pattern = ["OOP", "SINGLETON"][Math.floor(Math.random() * 2)];
-    if (pattern === "OOP") {
-        let name = title.replace(/[^a-zA-Z]/g, '');
-        code += `local ${name} = {}\n${name}.__index = ${name}\n\nfunction ${name}.new()\n    return setmetatable({}, ${name})\nend\n\n`;
-        all.forEach(b => code += b.replace(/self:/g, `${name}:`) + "\n\n");
-        code += `return ${name}`;
-    } else {
-        code += `local Service = {}\n\n`;
-        all.forEach(b => code += b.replace(/function self:(.+)\((.*)\)/g, `function Service:$1($2)`) + "\n\n");
-        code += `return Service`;
-    }
+    let name = title.replace(/[^a-zA-Z]/g, '');
+    code += `local ${name} = {}\n${name}.__index = ${name}\n\nfunction ${name}.new()\n    return setmetatable({}, ${name})\nend\n\n`;
+    all.forEach(b => code += b.replace(/self:/g, `${name}:`) + "\n\n");
+    code += `return ${name}`;
     return code;
 }
 
@@ -114,12 +138,11 @@ function renderTools(filter = "") {
 
 function handleToolClick(type, title) {
     const tool = GENERATED_DATA[type].find(t => t.title === title);
-    if (tool.premium && !isPremiumUser) { showToast("Premium required.", "error"); return; }
+    if (tool.premium && !isPremiumUser) { window.showToast("Premium required.", "error"); return; }
     if (!tool.source) tool.source = generateLuauCode(tool.title, tool.type);
     document.getElementById('ws-title').innerText = tool.title;
     document.getElementById('workspace-overlay').style.display = 'flex';
-    document.getElementById('ws-output').value = "";
-    document.getElementById('ws-run-btn').onclick = () => { document.getElementById('ws-output').value = tool.source; showToast("Extracted.", "success"); };
+    document.getElementById('ws-output').value = tool.source;
 }
 
 function updateAuthUI(user) {
@@ -127,13 +150,17 @@ function updateAuthUI(user) {
     const profile = document.getElementById('user-profile');
     const authBtns = document.getElementById('auth-buttons');
     if (!profile || !authBtns) return;
+    
     if (user) {
         profile.style.display = 'flex';
         authBtns.style.display = 'none';
         isPremiumUser = user.email === 'jayden.ims.monte@gmail.com' || user.premium;
         document.getElementById('user-email').innerText = user.email;
         document.getElementById('user-badge').innerText = user.email === 'jayden.ims.monte@gmail.com' ? "OWNER" : (isPremiumUser ? "PREMIUM" : "FREE");
-        if (user.email === 'jayden.ims.monte@gmail.com') document.getElementById('nav-admin').style.display = 'flex';
+        if (user.email === 'jayden.ims.monte@gmail.com') {
+            const adminNav = document.getElementById('nav-admin');
+            if (adminNav) adminNav.style.display = 'flex';
+        }
     } else {
         profile.style.display = 'none';
         authBtns.style.display = 'flex';
@@ -141,14 +168,18 @@ function updateAuthUI(user) {
 }
 
 window.onload = () => {
-    initData(); renderTools();
+    initData(); renderTools(); renderLicenses();
     const saved = localStorage.getItem('zenith_usr');
-    if (saved) updateAuthUI(JSON.parse(saved));
+    if (saved) {
+        updateAuthUI(JSON.parse(saved));
+    } else {
+        updateAuthUI(null);
+    }
     document.getElementById('search-input').oninput = (e) => renderTools(e.target.value);
     document.getElementById('auth-form').onsubmit = (e) => {
         e.preventDefault();
         const user = { email: document.getElementById('auth-email').value, premium: document.getElementById('auth-email').value === 'jayden.ims.monte@gmail.com' };
         localStorage.setItem('zenith_usr', JSON.stringify(user));
-        updateAuthUI(user); closeModal('auth-modal'); showToast("Initialized.", "success");
+        updateAuthUI(user); closeModal('auth-modal'); window.showToast("Initialized.", "success");
     };
 };

@@ -102,37 +102,39 @@
         <section id="admin" class="dashboard-section">
             <div class="section-header"><h2>Admin <span style="color: var(--hack-neon);">Console</span></h2><p>Deep system controls for platform owners.</p></div>
             
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-top: 4rem;">
-                <div class="glass" style="padding: 1.5rem; border-color: var(--hack-neon);"><h4 style="color:var(--hack-neon); font-size:0.7rem; margin-bottom:0.5rem;">ACTIVE NODES</h4><p style="font-size: 2rem; font-weight: 900;">1,024</p></div>
-                <div class="glass" style="padding: 1.5rem; border-color: var(--hack-neon);"><h4 style="color:var(--hack-neon); font-size:0.7rem; margin-bottom:0.5rem;">DAILY TRAFFIC</h4><p style="font-size: 2rem; font-weight: 900;">85.2k</p></div>
-                <div class="glass" style="padding: 1.5rem; border-color: var(--hack-neon);"><h4 style="color:var(--hack-neon); font-size:0.7rem; margin-bottom:0.5rem;">PENDING TICKETS</h4><p style="font-size: 2rem; font-weight: 900;">12</p></div>
-                <div class="glass" style="padding: 1.5rem; border-color: var(--hack-neon);"><h4 style="color:var(--hack-neon); font-size:0.7rem; margin-bottom:0.5rem;">SYS HEALTH</h4><p style="font-size: 2rem; font-weight: 900; color: var(--accent-green);">100%</p></div>
-            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 4rem;">
+                <div class="glass" style="padding: 2.5rem;">
+                    <h3 style="margin-bottom: 2rem; color: var(--accent-gold);"><i class="fas fa-key"></i> License Manager</h3>
+                    <div style="margin-bottom: 2rem;">
+                        <label style="display: block; color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.8rem; font-weight: 800;">Duration Selection</label>
+                        <select id="license-duration" class="auth-input" style="background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: white;">
+                            <option value="30 Days">30 Days Access</option>
+                            <option value="Lifetime">Lifetime Access</option>
+                        </select>
+                        <button class="btn btn-primary" style="width: 100%;" onclick="generateLicense()">Generate Unique Key</button>
+                    </div>
+                    <div style="padding-top: 1.5rem; border-top: 1px solid var(--glass-border);">
+                        <h4 style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 1.5rem;">ACTIVE LICENSES</h4>
+                        <div id="license-list" style="max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
+                            <p style="color: var(--text-dim); font-size: 0.85rem; text-align: center;">No active licenses generated.</p>
+                        </div>
+                    </div>
+                </div>
 
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 3rem;">
-                <div class="glass" style="padding: 3rem;">
+                <div class="glass" style="padding: 2.5rem;">
                     <h3 style="margin-bottom: 2rem;">System Control</h3>
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
                         <button class="btn btn-outline" style="border-color: var(--hack-neon); color: var(--hack-neon);" onclick="showToast('GLOBAL BROADCAST SENT', 'success')"><i class="fas fa-broadcast-tower"></i> Global Broadcast</button>
-                        <button class="btn btn-outline" style="border-color: var(--hack-neon); color: var(--hack-neon);" onclick="showToast('REVOKING ALL LICENSES...', 'error')"><i class="fas fa-user-slash"></i> Revoke All Licenses</button>
                         <button class="btn btn-outline" style="border-color: var(--hack-neon); color: var(--hack-neon);" onclick="showToast('INITIATING SYSTEM LOCKDOWN', 'error')"><i class="fas fa-lock"></i> System Lockdown</button>
                         <button class="btn btn-outline" style="border-color: var(--hack-neon); color: var(--hack-neon);" onclick="showToast('FORCE UPDATE DEPLOYED', 'success')"><i class="fas fa-cloud-upload"></i> Force Update</button>
                     </div>
-                    <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(0,0,0,0.4); border-radius: 12px; border: 1px solid var(--glass-border);">
-                        <h4 style="color: var(--text-dim); margin-bottom: 1rem; font-size: 0.8rem;">BAN USER BY ID</h4>
-                        <div style="display: flex; gap: 1rem;"><input type="text" class="auth-input" style="flex:1; margin:0;" placeholder="User ID (e.g. 19283746)"><button class="btn btn-primary" style="background: var(--hack-neon);" onclick="showToast('USER BANNED', 'success')">Ban</button></div>
-                    </div>
-                </div>
-                <div class="glass" style="padding: 2rem; display: flex; flex-direction: column;">
-                    <h4 style="color: var(--text-dim); margin-bottom: 1.5rem; font-size: 0.8rem;">LIVE SYSTEM LOG</h4>
-                    <div style="flex: 1; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 1rem; font-family: monospace; font-size: 0.75rem; color: var(--accent-green); overflow-y: hidden;">
-                        <p>[INFO] Node #12 synchronized</p>
-                        <p>[WARN] High latency on Node #8</p>
-                        <p>[INFO] License #CORE-8291 verified</p>
-                        <p>[INFO] User #9283 authenticated</p>
-                        <p>[SEC] Unauthorized access blocked</p>
-                        <p>[INFO] System update check: OK</p>
-                        <p style="animation: blink 1s infinite;">_</p>
+                    
+                    <div style="margin-top: 3rem; padding: 2rem; background: rgba(0,0,0,0.4); border-radius: 12px; border: 1px solid var(--glass-border);">
+                        <h4 style="color: var(--text-dim); margin-bottom: 1rem; font-size: 0.75rem;">LIVE SYSTEM CONSOLE</h4>
+                        <div id="admin-log" style="font-family: monospace; font-size: 0.75rem; color: var(--accent-green);">
+                            <p>[INFO] License Manager loaded.</p>
+                            <p>[INFO] Waiting for admin input...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -148,7 +150,6 @@
             </div>
             <textarea id="ws-output" readonly style="flex: 1; background: #060608; border-radius: 12px; padding: 2rem; color: var(--primary-neon); font-family: monospace; border: 1px solid var(--glass-border); resize: none; outline: none;"></textarea>
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                <button id="ws-run-btn" class="btn btn-primary" style="flex: 1;">Extract Source</button>
                 <button class="btn btn-outline" style="flex: 1;" onclick="copyOutput()">Copy</button>
             </div>
         </div>
