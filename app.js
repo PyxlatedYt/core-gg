@@ -1,58 +1,95 @@
-// --- ZENITH.GG CORE V7 ENGINE ---
+// --- ZENITH.GG V7.1 ELITE ENGINE ---
 // Credits Who made this: Zenith.gg
 
 const CATEGORIES = {
-    modules: { count: 250, icon: 'fa-microchip', prefix: ["Core", "Advanced", "Elite", "Dynamic", "Procedural", "Secure", "Quantum", "Nexus", "Titan", "Phantom", "Spectral"], suffix: ["Framework", "Engine", "Module", "Wrapper", "System", "Handler", "Manager", "Controller", "Bridge", "Core"] },
-    servers: { count: 150, icon: 'fa-server', prefix: ["Backend", "Data", "Economy", "Anti-Cheat", "Ban", "Validation", "Network", "Datastore", "Matchmaking", "Webhook"], suffix: ["Service", "Controller", "Processor", "Validator", "Sync", "Router", "API", "Broadcaster", "Listener"] },
-    clients: { count: 150, icon: 'fa-desktop', prefix: ["Local", "Camera", "Input", "Visual", "Movement", "Combat", "Render", "UI", "HUD", "Viewport", "Input"], suffix: ["Handler", "Manipulator", "Predictor", "VFX", "Controller", "Interceptor", "Client", "Listener", "Emitter"] }
+    modules: { count: 250, icon: 'fa-microchip', prefix: ["Elite", "Nexus", "Quantum", "Spectral", "Titan", "Phantom", "Aura", "Prime", "Void", "Nova"], suffix: ["Framework", "Engine", "Module", "Wrapper", "System", "Handler", "Manager", "Controller", "Bridge", "Core", "Provider", "Utility"] },
+    servers: { count: 150, icon: 'fa-server', prefix: ["Backend", "Data", "Economy", "Anti-Cheat", "Secure", "Cloud", "Network", "Socket", "Database", "Matchmaker"], suffix: ["Service", "Controller", "Processor", "Validator", "Sync", "Router", "API", "Broadcaster", "Listener", "Emitter", "Aggregator"] },
+    clients: { count: 150, icon: 'fa-desktop', prefix: ["Local", "Camera", "Visual", "Movement", "Combat", "Render", "HUD", "VFX", "Input", "Tween", "Predictor"], suffix: ["Handler", "Manipulator", "Controller", "Predictor", "VFX", "Interface", "Emitter", "Listener", "Manager", "Interceptor"] }
 };
 
 const LOGIC_BANKS = {
     combat: [
-        `function Combat:CastHitbox(params)\n    local region = Region3.new(params.Pos - Vector3.new(5,5,5), params.Pos + Vector3.new(5,5,5))\n    local targets = workspace:FindPartsInRegion3(region, nil, 100)\n    for _, part in pairs(targets) do\n        local hum = part.Parent:FindFirstChild("Humanoid")\n        if hum and hum.Health > 0 then self:ApplyDamage(hum) end\n    end\nend`,
-        `function Combat:ApplyKnockback(target, force)\n    local bv = Instance.new("BodyVelocity")\n    bv.Velocity = force\n    bv.MaxForce = Vector3.new(1,1,1) * 50000\n    bv.Parent = target.PrimaryPart\n    game.Debris:AddItem(bv, 0.1)\nend`
+        `function self:CastRaycastHitbox()\n    local params = RaycastParams.new()\n    params.FilterDescendantsInstances = {self.Player.Character}\n    params.FilterType = Enum.RaycastFilterType.Exclude\n    local result = workspace:Raycast(self.Origin, self.Direction * self.Range, params)\n    if result then self:OnHit(result.Instance) end\nend`,
+        `function self:CheckOverlap()\n    local params = OverlapParams.new()\n    params.FilterType = Enum.RaycastFilterType.Exclude\n    local targets = workspace:GetPartBoundsInBox(self.HitboxCF, self.HitboxSize, params)\n    for _, part in pairs(targets) do self:ProcessHit(part) end\nend`,
+        `function self:ApplyImpulse(target, strength)\n    local root = target:FindFirstChild("HumanoidRootPart")\n    if root then root:ApplyImpulse(self.Root.CFrame.LookVector * strength) end\nend`
     ],
     data: [
-        `local DataStoreService = game:GetService("DataStoreService")\nlocal PlayerData = DataStoreService:GetDataStore("GlobalData_V1")\n\nfunction Data:Save(player, data)\n    local success, err = pcall(function()\n        PlayerData:SetAsync(tostring(player.UserId), data)\n    end)\n    return success\nend`,
-        `function Data:Load(player)\n    local success, data = pcall(function()\n        return PlayerData:GetAsync(tostring(player.UserId))\n    end)\n    return data or self.DefaultTemplate\nend`
+        `local DataStore2 = require(1936396537)\nfunction self:GetBalance(player)\n    local store = DataStore2("Balance", player)\n    return store:Get(self.DefaultBalance)\nend`,
+        `function self:SaveAsync(key, data)\n    local success, err = pcall(function()\n        return self.Store:UpdateAsync(key, function(old)\n            local new = old or {}\n            for k,v in pairs(data) do new[k] = v end\n            return new\n        end)\n    end)\n    return success\nend`,
+        `local ProfileService = require(script.ProfileService)\nfunction self:LoadProfile(player)\n    local profile = self.Store:LoadProfileAsync("Player_" .. player.UserId)\n    if profile then profile:Reconcile() return profile end\nend`
     ],
     movement: [
-        `function Movement:ApplyDash(dir)\n    local hrp = self.Player.Character.HumanoidRootPart\n    hrp.CFrame = hrp.CFrame + (dir * 15)\n    local vfx = self:CreateDashVFX()\nend`,
-        `RunService.Heartbeat:Connect(function(dt)\n    if self.IsSprinting then\n        self.Humanoid.WalkSpeed = 25\n    else\n        self.Humanoid.WalkSpeed = 16\n    end\nend)`
+        `function self:Dash(direction)\n    local bv = Instance.new("LinearVelocity")\n    bv.VectorVelocity = direction * 50\n    bv.MaxForce = 100000\n    bv.Parent = self.Root\n    task.wait(0.2)\n    bv:Destroy()\nend`,
+        `function self:UpdateCamera(dt)\n    local targetCF = self.Subject.CFrame * self.Offset\n    self.Camera.CFrame = self.Camera.CFrame:Lerp(targetCF, dt * self.LerpSpeed)\nend`,
+        `function self:SmoothTilt(angle)\n    local target = CFrame.Angles(0, 0, math.rad(angle))\n    self.Root.RootJoint.C0 = self.Root.RootJoint.C0:Lerp(self.DefaultC0 * target, 0.1)\nend`
     ],
     security: [
-        `function Security:ValidateRemote(player, key)\n    if key ~= self.PrivateKey then\n        warn("[CORE] Unauthorized remote call from " .. player.Name)\n        return false\n    end\n    return true\nend`,
-        `function Security:CheckSpeedhack(player)\n    local speed = player.Character.HumanoidRootPart.AssemblyLinearVelocity.Magnitude\n    if speed > 100 then self:FlagPlayer(player, "Speedhack") end\nend`
+        `function self:VerifyPacket(player, data)\n    local timestamp = data.T\n    if os.clock() - timestamp > 0.5 then self:Flag(player, "Latency Spoof") return false end\n    return true\nend`,
+        `function self:CheckHumanoid(player)\n    local hum = player.Character:FindFirstChildOfClass("Humanoid")\n    if hum.WalkSpeed > 25 or hum.JumpPower > 60 then self:Ban(player, "Stat Modification") end\nend`,
+        `function self:HeartbeatCheck()\n    local now = tick()\n    if self.LastPing and now - self.LastPing > 10 then self:Disconnect() end\n    self.LastPing = now\nend`
+    ],
+    utility: [
+        `function self:DeepCopy(t)\n    local copy = {}\n    for k, v in pairs(t) do\n        copy[k] = (type(v) == "table") and self:DeepCopy(v) or v\n    end\n    return copy\nend`,
+        `local Signal = {}\nSignal.__index = Signal\nfunction Signal.new()\n    return setmetatable({_bindable = Instance.new("BindableEvent")}, Signal)\nend\nfunction Signal:Fire(...) self._bindable:Fire(...) end`,
+        `function self:FormatNumber(n)\n    return tostring(n):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")\nend`
     ],
     generic: [
-        `function self:Init()\n    print("[ZENITH] " .. self.Name .. " Initialized.")\n    self.Active = true\nend`,
-        `function self:Dispose()\n    self.Active = false\n    setmetatable(self, nil)\nend`
+        `function self:Init()\n    print("[ZENITH] Service " .. self.Name .. " active.")\n    self.Initialized = true\nend`,
+        `function self:OnStart()\n    task.spawn(function()\n        while self.Active do self:Update() task.wait(1) end\n    end)\nend`
     ]
 };
+
+const BROADCASTS = [
+    "ZENITH V7.1: New Quantum Modules deployed successfully.",
+    "Global Cache purged. Performance increased by 15%.",
+    "Elite License #ZNTH-8291 redeemed by user Jayden.",
+    "System Status: All 550+ nodes operational.",
+    "Security Matrix: No intrusions detected in last 24h.",
+    "Update: Improved Luau Script Generation uniqueness.",
+    "Boss Mode: Jayden.ims.monte@gmail.com detected online."
+];
 
 const GENERATED_DATA = { modules: [], servers: [], clients: [] };
 let isPremiumUser = false;
 let currentUser = null;
 
 function generateLuauCode(title, type) {
-    let hash = Math.random().toString(36).substring(2, 8).toUpperCase();
-    let code = `-- ZENITH.GG CORE V7\n-- Module: ${title}\n-- Hash: ${hash}\n\n`;
+    let hash = Math.random().toString(36).substring(2, 10).toUpperCase();
+    let lowerTitle = title.toLowerCase();
     
-    let blocks = [...LOGIC_BANKS.generic];
-    const lowerTitle = title.toLowerCase();
-    
-    if (lowerTitle.includes("combat") || lowerTitle.includes("hitbox")) blocks = [...blocks, ...LOGIC_BANKS.combat];
-    if (lowerTitle.includes("data") || lowerTitle.includes("economy") || lowerTitle.includes("save")) blocks = [...blocks, ...LOGIC_BANKS.data];
-    if (lowerTitle.includes("move") || lowerTitle.includes("dash") || lowerTitle.includes("camera")) blocks = [...blocks, ...LOGIC_BANKS.movement];
-    if (lowerTitle.includes("anti") || lowerTitle.includes("security") || lowerTitle.includes("check")) blocks = [...blocks, ...LOGIC_BANKS.security];
+    // Select category blocks
+    let pools = [LOGIC_BANKS.generic, LOGIC_BANKS.utility];
+    if (lowerTitle.includes("combat") || lowerTitle.includes("aura") || lowerTitle.includes("titan")) pools.push(LOGIC_BANKS.combat);
+    if (lowerTitle.includes("data") || lowerTitle.includes("save") || lowerTitle.includes("nexus")) pools.push(LOGIC_BANKS.data);
+    if (lowerTitle.includes("move") || lowerTitle.includes("camera") || lowerTitle.includes("tween")) pools.push(LOGIC_BANKS.movement);
+    if (lowerTitle.includes("anti") || lowerTitle.includes("secure") || lowerTitle.includes("verify")) pools.push(LOGIC_BANKS.security);
+
+    // Flatten and pick 3-4 unique blocks
+    let allBlocks = pools.flat();
+    let selected = [];
+    while (selected.length < 3) {
+        let block = allBlocks[Math.floor(Math.random() * allBlocks.length)];
+        if (!selected.includes(block)) selected.push(block);
+    }
+
+    let code = `-- ZENITH.GG ELITE SUITE V7.1\n-- Build: ${title}\n-- Type: ${type.toUpperCase()}\n-- Node: ${hash}\n\n`;
 
     if (type === 'modules') {
-        code += `local ${title.replace(/[^a-zA-Z]/g, '')} = {}\n\n`;
-        blocks.forEach(b => code += b + "\n\n");
-        code += `return ${title.replace(/[^a-zA-Z]/g, '')}`;
+        let className = title.replace(/[^a-zA-Z]/g, '');
+        code += `local ${className} = {}\n${className}.__index = ${className}\n\n`;
+        code += `function ${className}.new()\n    local self = setmetatable({}, ${className})\n    self.Name = "${title}"\n    self.Id = "${hash}"\n    return self\nend\n\n`;
+        selected.forEach(b => code += b.replace(/self:/g, `${className}:`) + "\n\n");
+        code += `return ${className}`;
+    } else if (type === 'servers') {
+        code += `local Players = game:GetService("Players")\nlocal RunService = game:GetService("RunService")\n\n`;
+        code += `-- Server initialization for ${title}\n\n`;
+        selected.forEach(b => code += b.replace(/function self:/g, `local function `) + "\n\n");
+        code += `Players.PlayerAdded:Connect(function(player)\n    print("ZENITH: Initializing ${hash} for " .. player.Name)\nend)`;
     } else {
-        code += `local RunService = game:GetService("RunService")\nlocal Players = game:GetService("Players")\n\n`;
-        blocks.forEach(b => code += b + "\n\n");
+        code += `local LocalPlayer = game.Players.LocalPlayer\nlocal UserInputService = game:GetService("UserInputService")\n\n`;
+        code += `-- Client controller for ${title}\n\n`;
+        selected.forEach(b => code += b.replace(/function self:/g, `local function `) + "\n\n");
+        code += `print("[ZENITH_${hash}] Controller Active: ${title}")`;
     }
     
     return code;
@@ -66,16 +103,16 @@ function initData() {
             do {
                 let p = config.prefix[Math.floor(Math.random() * config.prefix.length)];
                 let s = config.suffix[Math.floor(Math.random() * config.suffix.length)];
-                let v = `V${Math.floor(Math.random()*5)+1}.${Math.floor(Math.random()*10)}`;
+                let v = `V${Math.floor(Math.random()*9)+1}.${Math.floor(Math.random()*99)}`;
                 title = `${p} ${s} ${v}`;
             } while (titles.has(title));
             titles.add(title);
 
             GENERATED_DATA[key].push({
                 title: title,
-                desc: `Elite ${key} implementation. Built for high-concurrency games.`,
+                desc: `Elite ${key} implementation. Built for high-concurrency games. Build ID: ${title.split(' ')[2]}`,
                 icon: config.icon,
-                premium: Math.random() < 0.7,
+                premium: Math.random() < 0.8, // 80% premium
                 source: generateLuauCode(title, key)
             });
         }
@@ -101,7 +138,7 @@ function renderTools(filter = "") {
 
         filtered.forEach(t => {
             const card = document.createElement('div');
-            card.className = `glass tool-card ${t.premium ? 'premium-card' : ''}`;
+            card.className = `glass tool-card ${t.premium ? 'premium-card' : ''} animate-in`;
             card.innerHTML = `
                 <div class="tool-icon"><i class="fas ${t.icon}"></i></div>
                 ${t.premium ? '<div class="premium-tag"><i class="fas fa-crown"></i> ELITE</div>' : ''}
@@ -128,8 +165,19 @@ function openWorkspace(tool) {
     
     document.getElementById('ws-run-btn').onclick = () => {
         document.getElementById('ws-output').value = tool.source;
-        showToast("SOURCE INJECTED SUCCESSFULLY, SHIT IS FIRE LMAO", "success");
+        showToast("SOURCE INJECTED SUCCESSFULLY, FIRE AS FUCK LMAO", "success");
+        addActivity(`Extracted ${tool.title}`);
     };
+}
+
+function addActivity(text) {
+    const list = document.getElementById('recent-activity-list');
+    if (!list) return;
+    const item = document.createElement('div');
+    item.style.cssText = "padding: 0.8rem; border-bottom: 1px solid var(--glass-border); font-size: 0.85rem; color: var(--text-dim);";
+    item.innerHTML = `<span style="color: var(--primary-neon); font-weight:700;">[LOG]</span> ${text}`;
+    list.prepend(item);
+    if (list.children.length > 8) list.lastChild.remove();
 }
 
 function showToast(msg, type = 'info') {
@@ -151,12 +199,18 @@ function showToast(msg, type = 'info') {
     }, 3000);
 }
 
-function switchTab(target) {
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.dataset.target === target));
-    document.querySelectorAll('.dashboard-section').forEach(s => {
-        s.classList.toggle('active', s.id === target);
-        s.style.display = s.id === target ? 'block' : 'none';
-    });
+function startBroadcasts() {
+    const ticker = document.getElementById('system-ticker');
+    if (!ticker) return;
+    let index = 0;
+    setInterval(() => {
+        ticker.style.opacity = '0';
+        setTimeout(() => {
+            ticker.innerText = BROADCASTS[index];
+            ticker.style.opacity = '1';
+            index = (index + 1) % BROADCASTS.length;
+        }, 500);
+    }, 10000); // 10 seconds cycle
 }
 
 function updateAuthUI(user) {
@@ -180,7 +234,7 @@ function updateAuthUI(user) {
             adminNav.style.display = 'flex';
         } else if (isPremiumUser) {
             emailEl.innerHTML = `${user.email} <span style="color: var(--accent-gold);">[ELITE]</span>`;
-            badgeEl.innerText = "CORE ULTIMATE";
+            badgeEl.innerText = "ZENITH ULTIMATE";
             badgeEl.style.color = "var(--accent-gold)";
         } else {
             emailEl.innerText = user.email;
@@ -197,6 +251,7 @@ function updateAuthUI(user) {
 window.onload = () => {
     initData();
     renderTools();
+    startBroadcasts();
     
     const saved = localStorage.getItem('zenith_usr');
     if (saved) updateAuthUI(JSON.parse(saved));
@@ -217,6 +272,15 @@ window.onload = () => {
         showToast("LOGGED IN, LMAO FUCK YEAH", "success");
     };
 };
+
+function switchTab(target) {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.dataset.target === target));
+    document.querySelectorAll('.dashboard-section').forEach(s => {
+        s.classList.toggle('active', s.id === target);
+        s.style.display = s.id === target ? 'block' : 'none';
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 function signOut() {
     localStorage.removeItem('zenith_usr');

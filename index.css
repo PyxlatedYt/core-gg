@@ -45,8 +45,32 @@ body {
 }
 
 aside {
-    width: var(--sidebar-width); height: 100vh; position: fixed; left: 0; top: 0; background: var(--sidebar-bg);
-    border-right: 1px solid var(--glass-border); padding: 2.5rem 1.8rem; display: flex; flex-direction: column; z-index: 100; overflow-y: auto;
+    width: 320px;
+    background: rgba(10, 10, 12, 0.95);
+    border-right: 1px solid var(--glass-border);
+    padding: 2.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    z-index: 100;
+    backdrop-filter: blur(20px);
+}
+
+#system-ticker {
+    transition: opacity 0.5s ease-in-out;
+}
+
+#recent-activity-list div {
+    animation: fadeIn 0.3s ease-out;
+    border-left: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+#recent-activity-list div:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-left-color: var(--primary-neon);
+    padding-left: 1rem;
 }
 
 .logo-area { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 2.5rem; letter-spacing: -1.5px; background: linear-gradient(135deg, var(--primary-neon), var(--secondary-neon)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 2.5rem; text-align: center; }
