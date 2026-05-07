@@ -53,6 +53,65 @@ const GENERATED_DATA = { modules: [], servers: [], clients: [] };
 let isPremiumUser = false;
 let currentUser = null;
 
+// --- GLOBAL FUNCTIONS ---
+window.switchTab = function(target) {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.dataset.target === target));
+    document.querySelectorAll('.dashboard-section').forEach(s => {
+        s.classList.toggle('active', s.id === target);
+        s.style.display = s.id === target ? 'block' : 'none';
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.openAuth = function() {
+    const modal = document.getElementById('auth-modal');
+    if (modal) modal.style.display = 'flex';
+};
+
+window.closeModal = function(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.style.display = 'none';
+};
+
+window.signOut = function() {
+    localStorage.removeItem('zenith_usr');
+    location.reload();
+};
+
+window.closeWorkspace = function() {
+    const ws = document.getElementById('workspace-overlay');
+    if (ws) ws.style.display = 'none';
+};
+
+window.copyOutput = function() {
+    const output = document.getElementById('ws-output');
+    if (output) {
+        output.select();
+        document.execCommand('copy');
+        window.showToast("Copied to clipboard.", "success");
+    }
+};
+
+window.showToast = function(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'custom-toast';
+    
+    let color = 'var(--primary-neon)';
+    if (type === 'success') color = 'var(--accent-green)';
+    if (type === 'error') color = 'var(--hack-neon)';
+    
+    toast.style.borderLeftColor = color;
+    toast.innerHTML = `<i class="fas fa-info-circle" style="color:${color}"></i> <span>${msg}</span>`;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.4s forwards';
+        setTimeout(() => toast.remove(), 400);
+    }, 3000);
+};
+
 function generateLuauCode(title, type) {
     let hash = Math.random().toString(36).substring(2, 10).toUpperCase();
     let lowerTitle = title.toLowerCase();
@@ -72,30 +131,36 @@ function generateLuauCode(title, type) {
 
     let code = `-- CORE.GG PROFESSIONAL SUITE\n-- Resource: ${title}\n-- Type: ${type.toUpperCase()}\n-- Hash: ${hash}\n\n`;
 
-    // Multi-Structural Generation
     const structures = ["OOP", "FUNCTIONAL", "SINGLETON"];
     const pattern = structures[Math.floor(Math.random() * structures.length)];
 
-    if (pattern === "OOP") {
-        let className = title.replace(/[^a-zA-Z]/g, '');
-        code += `local ${className} = {}\n${className}.__index = ${className}\n\n`;
-        code += `function ${className}.new()\n    local self = setmetatable({}, ${className})\n    self.Name = "${title}"\n    self.Hash = "${hash}"\n    return self\nend\n\n`;
-        selected.forEach(b => code += b.replace(/self:/g, `${className}:`) + "\n\n");
-        code += `return ${className}`;
-    } else if (pattern === "FUNCTIONAL") {
-        code += `local ${title.replace(/[^a-zA-Z]/g, '')} = (function()\n    local exports = {}\n    \n`;
-        selected.forEach((b, i) => {
-            code += b.replace(/function self:(.+)\(/g, `local function method_${i}(`) + "\n\n";
-            let methodName = b.match(/function self:(.+)\(/)[1];
-            code += `    exports.${methodName} = method_${i}\n`;
-        });
-        code += `    \n    return exports\nend)()\n\nreturn ${title.replace(/[^a-zA-Z]/g, '')}`;
-    } else {
-        code += `local Service = {\n    Name = "${title}",\n    Hash = "${hash}",\n    Active = true\n}\n\n`;
-        selected.forEach(b => {
-            code += b.replace(/function self:(.+)\((.*)\)/g, `function Service:$1($2)`) + "\n\n";
-        });
-        code += `return Service`;
+    try {
+        if (pattern === "OOP") {
+            let className = title.replace(/[^a-zA-Z]/g, '');
+            code += `local ${className} = {}\n${className}.__index = ${className}\n\n`;
+            code += `function ${className}.new()\n    local self = setmetatable({}, ${className})\n    self.Name = "${title}"\n    self.Hash = "${hash}"\n    return self\nend\n\n`;
+            selected.forEach(b => code += b.replace(/self:/g, `${className}:`) + "\n\n");
+            code += `return ${className}`;
+        } else if (pattern === "FUNCTIONAL") {
+            let className = title.replace(/[^a-zA-Z]/g, '');
+            code += `local ${className} = (function()\n    local exports = {}\n    \n`;
+            selected.forEach((b, i) => {
+                let match = b.match(/function self:(.+)\(/);
+                if (match) {
+                    code += b.replace(/function self:(.+)\(/g, `local function method_${i}(`) + "\n\n";
+                    code += `    exports.${match[1]} = method_${i}\n`;
+                }
+            });
+            code += `    \n    return exports\nend)()\n\nreturn ${className}`;
+        } else {
+            code += `local Service = {\n    Name = "${title}",\n    Hash = "${hash}",\n    Active = true\n}\n\n`;
+            selected.forEach(b => {
+                code += b.replace(/function self:(.+)\((.*)\)/g, `function Service:$1($2)`) + "\n\n";
+            });
+            code += `return Service`;
+        }
+    } catch (e) {
+        code += `-- Error generating structural pattern: ${e.message}\nreturn {}`;
     }
     
     return code;
@@ -152,7 +217,7 @@ function renderTools(filter = "") {
             `;
             card.onclick = () => {
                 if (t.premium && !isPremiumUser) {
-                    showToast("Premium license required.", "error");
+                    window.showToast("Premium license required.", "error");
                     return;
                 }
                 openWorkspace(t);
@@ -163,16 +228,24 @@ function renderTools(filter = "") {
 }
 
 function openWorkspace(tool) {
-    document.getElementById('ws-title').innerText = tool.title;
-    document.getElementById('ws-desc').innerText = "Source Code Preview";
-    document.getElementById('workspace-overlay').style.display = 'flex';
-    document.getElementById('ws-output').value = "";
+    const wsTitle = document.getElementById('ws-title');
+    const wsDesc = document.getElementById('ws-desc');
+    const wsOverlay = document.getElementById('workspace-overlay');
+    const wsOutput = document.getElementById('ws-output');
+    const runBtn = document.getElementById('ws-run-btn');
+
+    if (wsTitle) wsTitle.innerText = tool.title;
+    if (wsDesc) wsDesc.innerText = "Source Code Preview";
+    if (wsOverlay) wsOverlay.style.display = 'flex';
+    if (wsOutput) wsOutput.value = "";
     
-    document.getElementById('ws-run-btn').onclick = () => {
-        document.getElementById('ws-output').value = tool.source;
-        showToast("Source code generated.", "success");
-        addActivity(`Retrieved ${tool.title}`);
-    };
+    if (runBtn) {
+        runBtn.onclick = () => {
+            if (wsOutput) wsOutput.value = tool.source;
+            window.showToast("Source code generated.", "success");
+            addActivity(`Retrieved ${tool.title}`);
+        };
+    }
 }
 
 function addActivity(text) {
@@ -183,25 +256,6 @@ function addActivity(text) {
     item.innerHTML = `<span style="color: var(--primary-neon); font-weight:700;">[INFO]</span> ${text}`;
     list.prepend(item);
     if (list.children.length > 8) list.lastChild.remove();
-}
-
-function showToast(msg, type = 'info') {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = 'custom-toast';
-    
-    let color = 'var(--primary-neon)';
-    if (type === 'success') color = 'var(--accent-green)';
-    if (type === 'error') color = 'var(--hack-neon)';
-    
-    toast.style.borderLeftColor = color;
-    toast.innerHTML = `<i class="fas fa-info-circle" style="color:${color}"></i> <span>${msg}</span>`;
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.animation = 'slideOutRight 0.4s forwards';
-        setTimeout(() => toast.remove(), 400);
-    }, 3000);
 }
 
 function startBroadcasts() {
@@ -224,6 +278,8 @@ function updateAuthUI(user) {
     const authBtns = document.getElementById('auth-buttons');
     const adminNav = document.getElementById('nav-admin');
 
+    if (!profile || !authBtns) return;
+
     if (user) {
         profile.style.display = 'flex';
         authBtns.style.display = 'none';
@@ -232,23 +288,25 @@ function updateAuthUI(user) {
         const emailEl = document.getElementById('user-email');
         const badgeEl = document.getElementById('user-badge');
         
-        if (user.email === 'jayden.ims.monte@gmail.com') {
-            emailEl.innerHTML = `${user.email} <span style="color: var(--hack-neon);">[OWNER]</span>`;
-            badgeEl.innerText = "OWNER";
-            badgeEl.style.color = "var(--hack-neon)";
-            adminNav.style.display = 'flex';
-        } else if (isPremiumUser) {
-            emailEl.innerHTML = `${user.email} <span style="color: var(--accent-gold);">[PREMIUM]</span>`;
-            badgeEl.innerText = "CORE PREMIUM";
-            badgeEl.style.color = "var(--accent-gold)";
-        } else {
-            emailEl.innerText = user.email;
-            badgeEl.innerText = "FREE USER";
+        if (emailEl && badgeEl) {
+            if (user.email === 'jayden.ims.monte@gmail.com') {
+                emailEl.innerHTML = `${user.email} <span style="color: var(--hack-neon);">[OWNER]</span>`;
+                badgeEl.innerText = "OWNER";
+                badgeEl.style.color = "var(--hack-neon)";
+                if (adminNav) adminNav.style.display = 'flex';
+            } else if (isPremiumUser) {
+                emailEl.innerHTML = `${user.email} <span style="color: var(--accent-gold);">[PREMIUM]</span>`;
+                badgeEl.innerText = "CORE PREMIUM";
+                badgeEl.style.color = "var(--accent-gold)";
+            } else {
+                emailEl.innerText = user.email;
+                badgeEl.innerText = "FREE USER";
+            }
         }
     } else {
         profile.style.display = 'none';
         authBtns.style.display = 'flex';
-        adminNav.style.display = 'none';
+        if (adminNav) adminNav.style.display = 'none';
         isPremiumUser = false;
     }
 }
@@ -261,52 +319,23 @@ window.onload = () => {
     const saved = localStorage.getItem('zenith_usr');
     if (saved) updateAuthUI(JSON.parse(saved));
 
-    document.getElementById('search-input').oninput = (e) => renderTools(e.target.value);
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.oninput = (e) => renderTools(e.target.value);
     
     document.querySelectorAll('.nav-item').forEach(i => {
-        i.onclick = () => { if(i.dataset.target) switchTab(i.dataset.target); };
+        i.onclick = () => { if(i.dataset.target) window.switchTab(i.dataset.target); };
     });
 
-    document.getElementById('auth-form').onsubmit = (e) => {
-        e.preventDefault();
-        const email = document.getElementById('auth-email').value;
-        const user = { email, premium: email === 'jayden.ims.monte@gmail.com' };
-        localStorage.setItem('zenith_usr', JSON.stringify(user));
-        updateAuthUI(user);
-        document.getElementById('auth-modal').style.display = 'none';
-        showToast("Authentication successful.", "success");
-    };
+    const authForm = document.getElementById('auth-form');
+    if (authForm) {
+        authForm.onsubmit = (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const user = { email, premium: email === 'jayden.ims.monte@gmail.com' };
+            localStorage.setItem('zenith_usr', JSON.stringify(user));
+            updateAuthUI(user);
+            window.closeModal('auth-modal');
+            window.showToast("Authentication successful.", "success");
+        };
+    }
 };
-
-function switchTab(target) {
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.dataset.target === target));
-    document.querySelectorAll('.dashboard-section').forEach(s => {
-        s.classList.toggle('active', s.id === target);
-        s.style.display = s.id === target ? 'block' : 'none';
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function signOut() {
-    localStorage.removeItem('zenith_usr');
-    location.reload();
-}
-
-function closeWorkspace() {
-    document.getElementById('workspace-overlay').style.display = 'none';
-}
-
-function copyOutput() {
-    const output = document.getElementById('ws-output');
-    output.select();
-    document.execCommand('copy');
-    showToast("Copied to clipboard.", "success");
-}
-
-function openAuth() {
-    document.getElementById('auth-modal').style.display = 'flex';
-}
-
-function closeModal(id) {
-    document.getElementById(id).style.display = 'none';
-}
